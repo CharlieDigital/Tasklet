@@ -1,5 +1,4 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.4.2">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,13 +6,11 @@
     <Nullable>enable</Nullable>
     <UserSecretsId>7ad2cfe8-44ee-47eb-b6fc-8bcc0934a445</UserSecretsId>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.4.2" />
+    <PackageReference Include="Aspire.Hosting.Yarp" Version="13.1.1" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\src\backend\Tasklet.API.csproj" />
+    <ProjectReference Include="..\src\backend\runtime\Tasklet.API.csproj" />
   </ItemGroup>
-
 </Project>
