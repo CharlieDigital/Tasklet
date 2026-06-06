@@ -5,17 +5,37 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "VITE_API_BASE_URL='https://tasklet.chrlschn.dev/api' kubb generate && vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "generate": "kubb generate --verbose"
   },
   "dependencies": {
-    "vue": "^3.5.34"
+    "pinia": "^3.0.4",
+    "vue": "^3.5.34",
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
-    "@types/node": "^24.12.3",
+    "@kubb/cli": "^4.25.2",
+    "@kubb/core": "^4.23.0",
+    "@kubb/plugin-client": "^4.23.0",
+    "@kubb/plugin-oas": "^4.23.0",
+    "@kubb/plugin-ts": "^4.23.0",
+    "@types/node": "^24.10.1",
+    "@unocss/preset-attributify": "^66.6.0",
+    "@unocss/preset-tagify": "^66.6.0",
+    "@unocss/preset-typography": "^66.6.0",
+    "@unocss/preset-web-fonts": "^66.6.0",
+    "@unocss/preset-wind4": "^66.6.0",
+    "@vicons/antd": "^0.13.0",
+    "@vicons/tabler": "^0.13.0",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
+    "naive-ui": "^2.44.1",
     "typescript": "~6.0.2",
+    "unocss": "^66.7.0",
+    "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^32.1.0",
+    "vfonts": "^0.0.3",
     "vite": "^8.0.12",
     "vue-tsc": "^3.2.8"
   }

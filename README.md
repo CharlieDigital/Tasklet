@@ -80,7 +80,11 @@ This will bring up Aspire with the following key components:
 
 - Vue is chosen for its simplicity
 - NaiveUI is selected as the component library for its rich components, clean design, stylable theme
-- UnoCSS with the Windy4 CSS preset and attributity as this provides front-end teams with familiarity and flexibility in making it prettier 😅
+- UnoCSS with the Wind4 CSS preset and attributity as this provides front-end teams with familiarity and flexibility in making it prettier 😅
+- Key packages
+  - `unplugin-auto-import`: Automatically imports APIs on demand as you use them in templates and scripts, reducing boilerplate and improving DX
+  - `unplugin-vue-components`: Automatically imports Vue components as you use them in templates
+  - `unplugin-vue-router`: Automatically generates Vue Router routes based on your file system, simplifying navigation setup
 - No Quasar: I like it better for possible responsive design and mobile support, but that can be a future refinement
 - No FE tests for now; we keep it simple and rely on Playwright to verify during dev
 
