@@ -20,7 +20,7 @@ var buildGenerate = builder
     .AddExecutable(
         "tasklet-schema-publish",
         "dotnet",
-        "../src/backend",
+        "../src/backend/runtime",
         ["watch", "build", "--non-interactive"]
     )
     .WithEnvironment("GEN", "true");

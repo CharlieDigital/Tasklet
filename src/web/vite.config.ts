@@ -22,7 +22,6 @@ export default defineConfig(({ mode }) => ({
         "vue",
         "pinia",
         "vue-router",
-        "@vueuse/core",
         {
           // See: https://www.naiveui.com/en-US/light/docs/import-on-demand
           "naive-ui": [
