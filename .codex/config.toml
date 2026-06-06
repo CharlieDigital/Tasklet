@@ -1,0 +1,23 @@
+[mcp_servers.aspire]
+command = "aspire"
+args = ["agent", "mcp", "--non-interactive"]
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest", "--extension"]
+
+[mcp_servers.glider]
+enabled = true
+url = "http://localhost:5055/mcp"
+
+[mcp_servers.aspire.tools.list_resources]
+approval_mode = "approve"
+
+[mcp_servers.aspire.tools.list_console_logs]
+approval_mode = "approve"
+
+[mcp_servers.aspire.tools.list_structured_logs]
+approval_mode = "approve"
+
+[mcp_servers.aspire.tools.execute_resource_command]
+approval_mode = "approve"

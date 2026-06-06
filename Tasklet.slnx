@@ -1,8 +1,12 @@
 <Solution>
+  <Folder Name="/host/">
+    <Project Path="host/Tasklet.AppHost.csproj" />
+  </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/backend/">
     <Project Path="src/backend/runtime/Tasklet.API.csproj" />
   </Folder>
+  <Folder Name="/src/backend/runtime/" />
   <Folder Name="/src/tests/">
     <Project Path="src/tests/Tasklet.Tests.csproj" />
   </Folder>

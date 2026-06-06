@@ -9,6 +9,9 @@ A v1, production read TODO list!
 |.NET SDK|10|[Download](https://dotnet.microsoft.com/en-us/download)|
 |Node|24|[Download](https://nodejs.org/en/download)|
 |Yarn|4|[Download](https://yarnpkg.com/getting-started/install)|
+|Docker|(latest)|[Download](https://www.docker.com/get-started/)|
+
+> I debated on whether to use the Firebase docker container or `npx`, but `npx` run version does not shut down cleanly and will lose the state for stop/restart cycles.`
 
 ## How to Run
 
@@ -17,17 +20,28 @@ The application uses Aspire to orchestrate.
 For local development:
 
 ```shell
+# Install tools (Glider MCP)
+dotnet tool restore
+
 # Using standard `dotnet` CLI
 dotnet run --project host
 
 # With hot reload
 dotnet watch run --project host
+dotnet watch run --project host --non-interactive
 
 # With Aspire CLI (watch is on by default)
 aspire run
 ```
 
-This will bring up Aspire with the following key components
+This will bring up Aspire with the following key components:
+
+|Component|Description|
+|---|---|
+|`tasklet-api`|The .NET backend API, running on `http://api.localhost:8089`|
+|`tasklet-web`|The Vue frontend, running on `http://tasklet.localhost:8089`|
+|`firebase-emulator`|Firebase emulator for auth, running on `http://localhost:9099`|
+|`glider-mcp`|Glider MCP which provides the agent a Roslyn analyzer|
 
 ## Features
 

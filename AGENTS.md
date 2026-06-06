@@ -16,3 +16,9 @@
 ### Frontend (`src/frontend`)
 
 - See: `.agents/context/tasklet-frontend-vue.md` for important Vue 3 guidance
+
+### Automated Testing
+
+- Frontend URI: `http://tasklet.localhost:8089`
+- Backend API URI: `http://api.localhost:8089`
+- Use Playwright to test the frontend
