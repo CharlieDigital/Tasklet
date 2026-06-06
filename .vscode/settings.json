@@ -1,0 +1,15 @@
+{
+  "cSpell.words": ["Tasklet"],
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": false
+  }
+}

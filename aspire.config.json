@@ -1,0 +1,8 @@
+{
+  "appHost": {
+    "language": "csharp"
+  },
+  "features": {
+    "defaultWatchEnabled": "true"
+  }
+}
