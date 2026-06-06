@@ -2,6 +2,7 @@
 
 - Use modern .NET 10, C# 14 (NOV25) language features: `var`, switch expressions, pattern matching, collection initializers, record types, tuples, ranges, and so on.
 - Make use of pattern matching for terseness and expressive code
+- Use named parameters and named tuples for readability and safety
 - Keep performance in mind and use appropriate data types
 - Prefer C# 14 `extension` blocks for extension members instead of static helper and static util methods and classes
   - Extend collections like `IReadOnlyList<SomeType>` instead of writing `SomeStaticMethod(IReadOnlyList<SomeType>)`

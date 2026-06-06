@@ -33,7 +33,11 @@ var gliderMcp = builder
 
 // Add Firebase container for auth
 var firebase = builder
-    .AddDockerfile(name: "firebase-emulator", "./Dockerfile.firebase")
+    .AddDockerfile(
+        name: "firebase-emulator",
+        contextPath: ".",
+        dockerfilePath: "Dockerfile.firebase"
+    )
     .WithHttpEndpoint(9099, 9099, name: "firebase", isProxied: true);
 
 // Vue front-end app.

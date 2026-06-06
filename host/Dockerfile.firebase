@@ -2,11 +2,10 @@
 
 FROM node:24-alpine
 ARG FIREBASE_VERSION=15.19.1
-RUN apk --no-cache add openjdk11-jre bash curl openssl gettext nano nginx sudo && \
+RUN apk --no-cache add openjdk21-jre bash curl && \
   npm cache clean --force && \
   npm i -g firebase-tools@$FIREBASE_VERSION
-COPY nginx.conf /etc/nginx/
-COPY serve.sh /usr/bin/
-RUN chmod +x /usr/bin/serve.sh
 WORKDIR /srv/firebase
-ENTRYPOINT ["/usr/bin/serve.sh"]
+RUN printf '{ "emulators": { "auth": { "host": "0.0.0.0", "port": 9099 } } }\n' > firebase.json
+EXPOSE 9099
+ENTRYPOINT ["firebase", "emulators:start", "--only", "auth", "--project", "demo-tasklet"]
