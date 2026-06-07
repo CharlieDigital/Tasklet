@@ -484,3 +484,5 @@ $RECYCLE.BIN/
 # Ignore the data directory
 .data/firebase
 .data/sqlite
+
+.playwright-mcp/
