@@ -2,7 +2,10 @@ import AppLayout from "@/layouts/AppLayout.vue";
 import type { RouteRecordRaw } from "vue-router";
 
 /**
- * The list of routes in the app.
+ * Application routes.
+ *
+ * Login and Logout are kept under the app layout so the shell remains stable
+ * while the router guard handles auth side effects.
  */
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -23,6 +26,17 @@ export const routes: Array<RouteRecordRaw> = [
       {
         path: "",
         name: "Login",
+        component: () => import("@/views/Login.vue"),
+      },
+    ],
+  },
+  {
+    path: "/logout",
+    component: AppLayout,
+    children: [
+      {
+        path: "",
+        name: "Logout",
         component: () => import("@/views/Login.vue"),
       },
     ],

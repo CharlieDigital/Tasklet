@@ -3,10 +3,10 @@
 * Do not edit manually.
 */
 
-import fetch from "@kubb/plugin-client/clients/fetch";
+import fetch from "../../tasklet-api-client";
+import type { Client, RequestConfig, ResponseErrorConfig } from "../../tasklet-api-client";
 import type { MeQueryResponse } from "../types/Me.ts";
-import type { Client, RequestConfig, ResponseErrorConfig } from "@kubb/plugin-client/clients/fetch";
-import { mergeConfig } from "@kubb/plugin-client/clients/fetch";
+import { mergeConfig } from "../../tasklet-api-client";
 
 export class User {
   static #config: Partial<RequestConfig> & { client?: Client } = {}
@@ -17,7 +17,7 @@ export class User {
    */
     static async me(config: Partial<RequestConfig> & { client?: Client } = {}) {
     const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
-    const res = await request<MeQueryResponse, ResponseErrorConfig<Error>, unknown>({ ... requestConfig, method : "GET", url : `/v1/me`, baseURL : "http://app.localhost:8085/api" })
+    const res = await request<MeQueryResponse, ResponseErrorConfig<Error>, unknown>({ ... requestConfig, method : "GET", url : `/v1/me` })
     return res.data
   }
 }

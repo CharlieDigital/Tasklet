@@ -33,7 +33,7 @@
             size="large"
             w-full
             :loading="loginLoading"
-            :disabled="loginLoading"
+            :disabled="loginLoading || isAuthenticated"
             @click="handleLogin()"
           >
             <template #icon>
@@ -56,7 +56,7 @@ import { useRoute, useRouter } from "vue-router";
 const appStore = useAppStore();
 const router = useRouter();
 const route = useRoute();
-const { loginLoading, loginError } = storeToRefs(appStore);
+const { isAuthenticated, loginLoading, loginError } = storeToRefs(appStore);
 
 function clearError() {
   loginError.value = null;
@@ -67,7 +67,9 @@ async function handleLogin() {
     await appStore.login();
     const redirect = route.query.redirect;
 
-    router.push(typeof redirect === "string" ? redirect : { name: "Home" });
+    await router.push(
+      typeof redirect === "string" ? redirect : { name: "Home" },
+    );
   } catch {
     // Error is already set on appStore.loginError by the login() action.
     // The NAlert above will display it; no additional handling needed here.

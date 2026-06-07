@@ -3,10 +3,10 @@
 * Do not edit manually.
 */
 
-import fetch from "@kubb/plugin-client/clients/fetch";
+import fetch from "../../tasklet-api-client";
+import type { Client, RequestConfig, ResponseErrorConfig } from "../../tasklet-api-client";
 import type { HealthQueryResponse } from "../types/Health.ts";
-import type { Client, RequestConfig, ResponseErrorConfig } from "@kubb/plugin-client/clients/fetch";
-import { mergeConfig } from "@kubb/plugin-client/clients/fetch";
+import { mergeConfig } from "../../tasklet-api-client";
 
 export class Health {
   static #config: Partial<RequestConfig> & { client?: Client } = {}
@@ -17,7 +17,7 @@ export class Health {
    */
     static async health(config: Partial<RequestConfig> & { client?: Client } = {}) {
     const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
-    const res = await request<HealthQueryResponse, ResponseErrorConfig<Error>, unknown>({ ... requestConfig, method : "GET", url : `/health`, baseURL : "http://app.localhost:8085/api" })
+    const res = await request<HealthQueryResponse, ResponseErrorConfig<Error>, unknown>({ ... requestConfig, method : "GET", url : `/health` })
     return res.data
   }
 }

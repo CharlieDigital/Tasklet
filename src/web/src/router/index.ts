@@ -9,22 +9,29 @@ const router = createRouter({
 });
 
 /**
- * Navigation guard that enforces authentication and handles logout.
+ * Navigation guard for auth-protected routes.
+ *
+ * It waits for Firebase's initial session restoration before deciding whether
+ * to redirect. Logout is represented as a route so menu navigation and direct
+ * URL access share one sign-out path.
  */
 router.beforeEach(async (to) => {
   const appStore = useAppStore();
+  await appStore.ensureAuthReady();
 
-  // Logout: clear tokens and fall through to the login redirect.
   if (to.name === "Logout") {
     await appStore.logout();
     return { name: "Login" };
   }
 
-  // TODO: Check if the current user is authenticated (Firebase in app-store.ts and read here)
-
-  // No valid session: send to login (but don't redirect login to itself).
-  if (to.name !== "Login") {
+  if (!appStore.isAuthenticated && to.name !== "Login") {
     return { name: "Login", query: { redirect: to.fullPath } };
+  }
+
+  if (appStore.isAuthenticated && to.name === "Login") {
+    const redirect = to.query.redirect;
+
+    return typeof redirect === "string" ? redirect : { name: "Home" };
   }
 });
 

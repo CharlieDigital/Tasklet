@@ -8,4 +8,4 @@ RUN apk --no-cache add openjdk21-jre bash curl && \
 WORKDIR /srv/firebase
 RUN printf '{ "emulators": { "auth": { "host": "0.0.0.0", "port": 9099 } } }\n' > firebase.json
 EXPOSE 9099
-ENTRYPOINT ["firebase", "emulators:start", "--only", "auth", "--project", "demo-tasklet"]
+ENTRYPOINT ["firebase", "emulators:start", "--only", "auth", "--project", "tasklet-app"]

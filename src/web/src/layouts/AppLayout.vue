@@ -88,13 +88,7 @@ const { leftMenuOptions, bottomMenuOptions, isDarkMode } =
   storeToRefs(appStore);
 
 async function handleMenuUpdate(value: string) {
-  if (value === "/logout") {
-    await appStore.logout();
-    router.push("/login");
-    return;
-  }
-
-  router.push(value);
+  await router.push(value);
 }
 </script>
 

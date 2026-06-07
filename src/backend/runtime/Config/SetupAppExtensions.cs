@@ -21,6 +21,8 @@ public static class SetupAppExtensions
             // We want to serve the web app from the root URL so we'll serve the backend from /api.
             app.UsePathBase("/api");
 
+            app.UseCors("api-cors-policy");
+
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -52,8 +54,6 @@ public static class SetupAppExtensions
                 app.MapOpenApi();
                 app.MapScalarApiReference("/scalar");
             }
-
-            app.UseCors("api-cors-policy");
 
             // TODO(production): Test this config by building the container
             if (!app.Environment.IsDevelopment())
