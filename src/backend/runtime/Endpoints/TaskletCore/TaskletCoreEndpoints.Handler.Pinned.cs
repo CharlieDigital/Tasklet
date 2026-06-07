@@ -1,0 +1,52 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Tasklet.Core.Endpoints;
+using Tasklet.Core.Model;
+
+namespace Tasklet.Runtime.Endpoints;
+
+/// <summary>
+/// Lists pinned Tasklets owned by the authenticated user.
+/// </summary>
+/// <remarks>
+/// Pinned Tasklets are the important items the UI can always show in a separate
+/// lane, so this handler uses the explicit pinned storage entry point.
+/// </remarks>
+public class PinnedTaskletsHandler(ITaskletStorage storage) : IEndpointHandler
+{
+    /// <summary>
+    /// Handles the current user's pinned Tasklet list query.
+    /// </summary>
+    public async Task<Results<Ok<TaskletListResponse>, UnauthorizedHttpResult>> Handle(
+        ClaimsPrincipal user,
+        int skip = 0,
+        int take = 25,
+        TaskletSortField? sort = null,
+        SortDirection direction = SortDirection.Descending
+    )
+    {
+        var userId = user.GetTaskletUserId();
+
+        if (userId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var normalizedSkip = Math.Max(skip, 0);
+        var normalizedTake = Math.Min(take <= 0 ? 25 : take, 100);
+        var tasklets = await storage.GetPinnedTaskletsForUserAsync(
+            userId,
+            normalizedSkip,
+            normalizedTake,
+            sort.ToOrderBy(),
+            direction
+        );
+        var response = new TaskletListResponse(
+            tasklets.Select(tasklet => tasklet.ToResponse()).ToList(),
+            normalizedSkip,
+            normalizedTake
+        );
+
+        return TypedResults.Ok(response);
+    }
+}

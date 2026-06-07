@@ -42,3 +42,114 @@
   - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo --treenode-filter "/*/*/SqliteStorageProviderTests/*"` passed: 18/18 storage tests.
   - `dotnet build src/tests/Tasklet.Tests.csproj --no-restore --nologo` passed with existing warnings in `Tasklet.Core.csproj` and `SetupServicesExtensions.cs`.
   - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo` passed: 20/20 tests.
+
+### Phase 2: Runtime DI Wiring And Startup Initialization
+
+- Started Phase 2 after the user's checkpoint approval.
+- Confirmed the working tree was clean at the start of the phase.
+- Added a runtime project reference from `Tasklet.Runtime` to `Tasklet.Sqlite`.
+- Added `SqliteServiceCollectionExtensions.AddTaskletSqliteStorage(...)` in the SQLite project.
+  - Validates the SQLite connection string.
+  - Registers `SqliteContext` with `UseSqlite(...)`.
+  - Registers `ITaskletStorage` as scoped to `SqliteStorageProvider`.
+- Added `SetupServicesExtensions.AddTaskletStorage(...)` in runtime.
+  - Validates `AppSettings:Storage`.
+  - Switches on `StorageProvider`.
+  - Calls the SQLite registration extension for `StorageProvider.Sqlite`.
+  - Throws a clear exception for unsupported providers.
+- Updated `Program.cs` to:
+  - call `.AddTaskletStorage(settings)` with the other core services,
+  - create a startup DI scope,
+  - resolve `ITaskletStorage`,
+  - call `InitializeAsync()` before mapping HTTP routes,
+  - log before and after storage initialization.
+- Verified `src/backend/runtime/appsettings.json` already had the planned SQLite settings, so no configuration value change was needed.
+- Verification:
+  - `dotnet build src/backend/runtime/Tasklet.Runtime.csproj --no-restore --nologo` passed with the existing `NETSDK1080` warning.
+  - The build-time OpenAPI document generation executed runtime startup and logged successful SQLite migration/initialization.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo` passed: 20/20 tests.
+- Runtime smoke:
+  - Aspire was already running, so attempted to rebuild only `tasklet-api`.
+  - The Aspire MCP rebuild command timed out after 120 seconds.
+  - The resource then remained in `Building`; logs showed it was trying to rebuild/start stale project path `src/backend/runtime/Tasklet.API.csproj`.
+  - `aspire resource tasklet-api stop` succeeded, but `aspire resource tasklet-api start` failed because the running AppHost model still pointed at the stale project path.
+  - Restarted the AppHost with `aspire stop`/`aspire start`; the detached start built successfully but did not remain registered with Aspire MCP on this machine.
+  - Performed a direct short-lived runtime smoke instead:
+    - `ASPNETCORE_URLS=http://127.0.0.1:58765 ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/backend/runtime/Tasklet.Runtime.csproj --no-build --no-launch-profile`
+    - Startup logs showed storage initialization and migration completed before Kestrel listened.
+    - `curl http://127.0.0.1:58765/api/health` returned `200 OK` with `{"status":"Healthy",...}`.
+    - Stopped the short-lived runtime process with Ctrl-C.
+- Phase 2 checkpoint:
+  - Runtime startup initializes storage before route mapping.
+  - `.data/tasklet.db` was created by startup and is ignored by git.
+  - Endpoint code still depends on `ITaskletStorage`; no endpoint code references `SqliteContext`.
+  - Current caveat: the previously running Aspire AppHost could not be restored through `aspire start` in this environment after it was stopped to clear the stale resource model.
+- Final verification after user restarted the AppHost:
+  - Aspire MCP detected `/Users/cchen/code/oss/tasklet/host/Tasklet.AppHost.csproj`.
+  - `tasklet-api` was running and healthy from `Tasklet.Runtime.csproj`.
+  - Startup logs showed:
+    - `Migrating Sqlite Tasklet database at Data Source=../../../.data/tasklet.db.`
+    - `Sqlite Tasklet database is ready at Data Source=../../../.data/tasklet.db.`
+    - `Tasklet storage initialized.`
+  - `curl http://api.localhost:8089/api/health` returned `200 OK`.
+  - `dotnet build src/backend/runtime/Tasklet.Runtime.csproj --no-restore --nologo` passed with the existing `NETSDK1080` warning.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo` passed: 20/20 tests.
+
+### Phase 3: Authenticated Tasklet API Endpoints
+
+- Started Phase 3 after the user's checkpoint approval.
+- Added Tasklet API model contracts in `TaskletCoreEndpoints.Models.cs`.
+  - `TaskletResponse` and `TaskletListResponse` define the generated client response shape.
+  - `CreateTaskletRequest` keeps ownership out of the request body; the handler assigns `UserId` from Firebase claims.
+  - `UpdateTaskletRequest` includes only mutable fields; update handlers preserve `UserId` and `CreatedAtUtc`.
+  - `TaskletSortField` maps API query values to the storage sort expression.
+- Added `ClaimsPrincipalExtensions.GetTaskletUserId()`.
+  - Uses the Firebase `user_id` claim as the one API ownership source.
+  - Treats missing or blank values as unauthenticated for Tasklet handlers.
+- Added one handler per Tasklet endpoint:
+  - `ListTaskletsHandler`
+  - `PinnedTaskletsHandler`
+  - `GetTaskletHandler`
+  - `CreateTaskletHandler`
+  - `UpdateTaskletHandler`
+  - `DeleteTaskletHandler`
+- Added explicit pinned API surface:
+  - `GET /api/v1/tasklets/pinned`
+  - The handler calls `ITaskletStorage.GetPinnedTaskletsForUserAsync(...)`.
+  - This keeps important always-visible Tasklets as a first-class API entry point instead of hiding pinned behavior behind a filter on the general list route.
+- Mapped Tasklet Minimal API routes under `/api/v1/tasklets` with the `Tasklet` OpenAPI tag:
+  - `GET /api/v1/tasklets`
+  - `GET /api/v1/tasklets/pinned`
+  - `GET /api/v1/tasklets/{id:guid}`
+  - `POST /api/v1/tasklets`
+  - `PUT /api/v1/tasklets/{id:guid}`
+  - `DELETE /api/v1/tasklets/{id:guid}`
+- Added `TaskletEndpointTests`.
+  - 23 handler tests cover auth, owner scoping, request validation, list query forwarding, pinned entry point forwarding, mapping, create defaults, update immutability, and delete behavior.
+  - Every test starts with a guard comment matching the existing `UserEndpointTests` style.
+  - Used fake storage so endpoint tests stay focused on API flow while SQLite behavior remains covered by storage integration tests.
+- Regenerated OpenAPI and frontend Kubb clients.
+  - Generated `src/web/src/api/generated/clients/Tasklet.ts`.
+  - Generated Tasklet request/response/query types and enum types, including `SortDirection`.
+  - Confirmed generated `Tasklet.listPinnedTasklets(...)` exists.
+- Verification:
+  - `dotnet build src/backend/runtime/Tasklet.Runtime.csproj --no-restore --nologo` passed with the existing `NETSDK1080` warning.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo --treenode-filter "/*/*/TaskletEndpointTests/*"` passed: 23/23 Tasklet endpoint tests.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo --treenode-filter "/*/*/EndpointTests/*"` ran zero tests; this tree-node filter shape is not valid for the current TUnit tree.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo --treenode-filter "/*/*/UserEndpointTests/*"` passed: 2/2 user endpoint tests.
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo` passed: 43/43 tests.
+  - `GEN=true dotnet build src/backend/runtime/Tasklet.Runtime.csproj --no-restore --nologo` passed and generated 37 Kubb/OpenAPI files.
+  - `test -f src/web/src/api/generated/clients/Tasklet.ts` passed.
+  - `yarn --cwd src/web build` passed.
+    - The build emitted existing third-party Rolldown pure-annotation warnings from `@vueuse/core`.
+    - The build emitted the existing large chunk warning for the main bundle.
+- Runtime verification:
+  - Used Aspire MCP and rebuilt only `tasklet-api-mevdbznn` with the resource `rebuild` command.
+  - Rebuild succeeded with the existing `NETSDK1080` warning and restarted the resource.
+  - Aspire reported `tasklet-api` running and healthy from `Tasklet.Runtime.csproj`.
+  - `curl http://api.localhost:8089/api/health` returned `200 OK`.
+  - `curl http://api.localhost:8089/api/v1/tasklets` returned `401 Unauthorized` without credentials.
+  - `curl http://api.localhost:8089/api/v1/tasklets/pinned` returned `401 Unauthorized` without credentials.
+  - `rg '"/v1/tasklets|listPinnedTasklets|SortDirection' ...` confirmed OpenAPI and generated client coverage for the Tasklet routes, pinned route, and explicit sort direction query types.
+  - `git diff --check` passed after normalizing `Tasklet.Runtime.csproj` line endings.
+  - Final `dotnet build src/backend/runtime/Tasklet.Runtime.csproj --no-restore --nologo` passed with the existing `NETSDK1080` warning.

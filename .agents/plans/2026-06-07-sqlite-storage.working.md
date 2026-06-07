@@ -1149,46 +1149,48 @@ Checkpoint after Phase 3:
 
 ### Phase 1 Checklist
 
-- [ ] Add `.data/` SQLite ignores.
-- [ ] Update `ITaskletStorage` to accept `SortDirection`.
-- [ ] Implement `SqliteContext` `DbSet` and model mapping.
-- [ ] Add `SqliteDesignTimeContextFactory`.
-- [ ] Add initial EF migration.
-- [ ] Implement `SqliteStorageProvider`.
-- [ ] Update SQLite test fixtures for transaction-aware providers.
-- [ ] Add `SqliteStorageProviderTests`.
+- [x] Add `.data/` SQLite ignores.
+- [x] Update `ITaskletStorage` to accept `SortDirection`.
+- [x] Implement `SqliteContext` `DbSet` and model mapping.
+- [x] Add `SqliteDesignTimeContextFactory`.
+- [x] Add initial EF migration.
+- [x] Implement `SqliteStorageProvider`.
+- [x] Update SQLite test fixtures for transaction-aware providers.
+- [x] Add `SqliteStorageProviderTests`.
 - [ ] Format C# files.
-- [ ] Run targeted storage tests.
-- [ ] Run all tests.
-- [ ] Run solution build.
-- [ ] Stop for checkpoint.
+- [x] Run targeted storage tests.
+- [x] Run all tests.
+- [x] Run solution build.
+- [x] Stop for checkpoint.
 
 ### Phase 2 Checklist
 
-- [ ] Add runtime project reference to `Tasklet.Sqlite`.
-- [ ] Add SQLite DI extension.
-- [ ] Add runtime storage registration switch.
-- [ ] Initialize storage at startup inside a DI scope.
-- [ ] Verify local `.data/tasklet.db` creation and git ignore behavior.
-- [ ] Run runtime build.
-- [ ] Run all tests.
-- [ ] Run health smoke test if runtime is available.
-- [ ] Stop for checkpoint.
+- [x] Add runtime project reference to `Tasklet.Sqlite`.
+- [x] Add SQLite DI extension.
+- [x] Add runtime storage registration switch.
+- [x] Initialize storage at startup inside a DI scope.
+- [x] Verify local `.data/tasklet.db` creation and git ignore behavior.
+- [x] Run runtime build.
+- [x] Run all tests.
+- [x] Run health smoke test if runtime is available.
+- [x] Stop for checkpoint.
 
 ### Phase 3 Checklist
 
-- [ ] Add Tasklet API models and mapping helpers.
-- [ ] Add claims helper if needed.
-- [ ] Add list/get/create/update/delete handlers.
-- [ ] Map Tasklet CRUD routes.
-- [ ] Add handler tests.
-- [ ] Run targeted endpoint tests.
-- [ ] Run storage and endpoint test collection.
-- [ ] Run all tests.
-- [ ] Regenerate OpenAPI and Kubb clients.
-- [ ] Run frontend build/typecheck.
-- [ ] Run runtime/API smoke checks.
-- [ ] Stop for final checkpoint.
+- [x] Add Tasklet API models and mapping helpers.
+- [x] Add claims helper if needed.
+- [x] Add list/get/create/update/delete handlers.
+- [x] Map Tasklet CRUD routes.
+- [x] Add handler tests.
+- [x] Run targeted endpoint tests.
+- [x] Run storage and endpoint test collection.
+- [x] Run all tests.
+- [x] Regenerate OpenAPI and Kubb clients.
+- [x] Run frontend build/typecheck.
+- [x] Run runtime/API smoke checks.
+- [x] Stop for final checkpoint.
+
+Note: no standalone formatter command was available or run; generated Kubb output was formatted by its build hook, and C# build/test verification passed.
 
 ## Risk Register
 

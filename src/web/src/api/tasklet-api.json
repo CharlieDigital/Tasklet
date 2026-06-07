@@ -31,6 +31,278 @@
         }
       }
     },
+    "/v1/tasklets": {
+      "get": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Gets the current user's Tasklets.",
+        "operationId": "ListTasklets",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TaskletSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "default": "Descending",
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Creates a Tasklet for the current user.",
+        "operationId": "CreateTasklet",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskletRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasklets/pinned": {
+      "get": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Gets the current user's pinned Tasklets.",
+        "operationId": "ListPinnedTasklets",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TaskletSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "default": "Descending",
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tasklets/{id}": {
+      "get": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Gets one Tasklet owned by the current user.",
+        "operationId": "GetTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Updates a Tasklet owned by the current user.",
+        "operationId": "UpdateTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskletRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Deletes a Tasklet owned by the current user.",
+        "operationId": "DeleteTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/v1/me": {
       "get": {
         "tags": [
@@ -55,6 +327,101 @@
   },
   "components": {
     "schemas": {
+      "Color": {
+        "enum": [
+          "Amber",
+          "Lime",
+          "Emerald",
+          "Cyan",
+          "Blue",
+          "Indigo",
+          "Purple",
+          "Pink",
+          "Rose"
+        ]
+      },
+      "CreateTaskletRequest": {
+        "required": [
+          "title",
+          "body",
+          "status",
+          "priority",
+          "explicitOrder",
+          "pinned",
+          "color",
+          "completedAtUtc",
+          "dueAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Status"
+              }
+            ]
+          },
+          "priority": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Priority"
+              }
+            ]
+          },
+          "explicitOrder": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pinned": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "color": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Color"
+              }
+            ]
+          },
+          "completedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "Request model for creating a Tasklet."
+      },
       "HealthResponse": {
         "required": [
           "status",
@@ -71,6 +438,193 @@
           }
         },
         "description": "Simple healthcheck response"
+      },
+      "Priority": {
+        "enum": [
+          "Eventually",
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ]
+      },
+      "SortDirection": {
+        "enum": [
+          "Ascending",
+          "Descending"
+        ]
+      },
+      "Status": {
+        "enum": [
+          "NotStarted",
+          "InProgress",
+          "Completed",
+          "Blocked"
+        ]
+      },
+      "TaskletListResponse": {
+        "required": [
+          "items",
+          "skip",
+          "take"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskletResponse"
+            }
+          },
+          "skip": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "take": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Response model for paged Tasklet API lists."
+      },
+      "TaskletResponse": {
+        "required": [
+          "id",
+          "userId",
+          "title",
+          "body",
+          "status",
+          "priority",
+          "explicitOrder",
+          "pinned",
+          "color",
+          "createdAtUtc",
+          "completedAtUtc",
+          "dueAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "explicitOrder": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "color": {
+            "$ref": "#/components/schemas/Color"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "Response model for Tasklet API reads."
+      },
+      "TaskletSortField": {
+        "enum": [
+          "CreatedAtUtc",
+          "Title",
+          "Status",
+          "Priority",
+          "ExplicitOrder",
+          "CompletedAtUtc",
+          "DueAtUtc",
+          null
+        ]
+      },
+      "UpdateTaskletRequest": {
+        "required": [
+          "title",
+          "body",
+          "status",
+          "priority",
+          "explicitOrder",
+          "pinned",
+          "color",
+          "completedAtUtc",
+          "dueAtUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "explicitOrder": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "color": {
+            "$ref": "#/components/schemas/Color"
+          },
+          "completedAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAtUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        },
+        "description": "Request model for updating a Tasklet."
       },
       "UserInfoResponse": {
         "required": [
@@ -95,6 +649,9 @@
   "tags": [
     {
       "name": "Health"
+    },
+    {
+      "name": "Tasklet"
     },
     {
       "name": "User"

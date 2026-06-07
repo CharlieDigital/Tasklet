@@ -1,4 +1,5 @@
 using Tasklet.Core;
+using Tasklet.Core.Model;
 using Tasklet.Runtime.Config;
 
 Console.WriteLine("Starting Tasklet Runtime...");
@@ -31,9 +32,22 @@ if (settings == null)
 }
 
 // ⭐️ Add core services for Tasklet.
-builder.Services.AddFirebaseAuthentication(settings).AddTaskletHttp(settings);
+builder
+    .Services.AddFirebaseAuthentication(settings)
+    .AddTaskletHttp(settings)
+    .AddTaskletStorage(settings);
 
 var app = builder.Build();
+
+app.Logger.LogInformation("Initializing Tasklet storage.");
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var storage = scope.ServiceProvider.GetRequiredService<ITaskletStorage>();
+    await storage.InitializeAsync();
+}
+
+app.Logger.LogInformation("Tasklet storage initialized.");
 
 app.UseTaskletHttp(settings, builder.Environment);
 

@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\core\Tasklet.Core.csproj" />
+    <ProjectReference Include="..\sqlite\Tasklet.Sqlite.csproj" />
   </ItemGroup>
   <!--
   This section is a set of post-build commands to generate the schema.

@@ -11,6 +11,7 @@ using Serilog.Formatting.Compact;
 using Tasklet.Core;
 using Tasklet.Core.Endpoints;
 using Tasklet.Runtime.Middleware;
+using Tasklet.Sqlite;
 
 namespace Tasklet.Runtime.Config;
 
@@ -33,11 +34,13 @@ public static class SetupServicesExtensions
         /// </summary>
         public IServiceCollection AddFirebaseAuthentication(AppSettings settings)
         {
+            var projectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id";
+
             FirebaseApp.Create(
                 new AppOptions()
                 {
                     Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id",
+                    ProjectId = projectId,
                 }
             );
 
@@ -56,13 +59,15 @@ public static class SetupServicesExtensions
         /// </summary>
         public IServiceCollection AddTaskletHttp(AppSettings settings)
         {
+            var allowedCorsOrigins = settings.Auth?.AllowedCorsOrigins ?? [];
+
             // CORS config consumed later...
             services.AddCors(options =>
                 options.AddPolicy(
                     "api-cors-policy",
                     policy =>
                         policy
-                            .WithOrigins([.. settings.Auth?.AllowedCorsOrigins ?? []])
+                            .WithOrigins([.. allowedCorsOrigins])
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials()
@@ -98,6 +103,29 @@ public static class SetupServicesExtensions
             );
 
             return services;
+        }
+
+        /// <summary>
+        /// Registers the configured Tasklet storage provider.
+        /// </summary>
+        /// <remarks>
+        /// Runtime is the composition root, so it chooses which provider to use
+        /// from configuration. Endpoint handlers still depend on
+        /// <see cref="Tasklet.Core.Model.ITaskletStorage"/>, not SQLite.
+        /// </remarks>
+        public IServiceCollection AddTaskletStorage(AppSettings settings)
+        {
+            var storage =
+                settings.Storage
+                ?? throw new InvalidOperationException("AppSettings:Storage is required.");
+
+            return storage.Provider switch
+            {
+                StorageProvider.Sqlite => services.AddTaskletSqliteStorage(storage),
+                _ => throw new InvalidOperationException(
+                    $"Storage provider '{storage.Provider}' is not supported."
+                ),
+            };
         }
 
         /// <summary>
