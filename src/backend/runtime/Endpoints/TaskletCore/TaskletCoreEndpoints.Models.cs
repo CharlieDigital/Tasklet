@@ -61,12 +61,39 @@ public record UpdateTaskletRequest(
 /// </summary>
 public enum TaskletSortField
 {
+    /// <summary>
+    /// The date and time the Tasklet was created, in UTC. This is the default sort field if none is specified.
+    /// </summary>
     CreatedAtUtc,
+
+    /// <summary>
+    /// The Tasklet's title, alphabetically.
+    /// </summary>
     Title,
+
+    /// <summary>
+    /// The Tasklet's status.
+    /// </summary>
     Status,
+
+    /// <summary>
+    /// The Tasklet's priority.
+    /// </summary>
     Priority,
+
+    /// <summary>
+    /// The Tasklet's explicit order value, alphabetically.
+    /// </summary>
     ExplicitOrder,
+
+    /// <summary>
+    /// The date and time the Tasklet was completed, in UTC.
+    /// </summary>
     CompletedAtUtc,
+
+    /// <summary>
+    /// /// The date and time the Tasklet is due, in UTC.
+    /// </summary>
     DueAtUtc,
 }
 
