@@ -122,6 +122,7 @@ Use the core `SortDirection` enum for ordered list queries.
 Implementation consequence:
 
 - Update `ITaskletStorage.GetTaskletsForUserAsync(...)` to accept `SortDirection sortDirection = SortDirection.Descending`.
+- Add `ITaskletStorage.GetPinnedTaskletsForUserAsync(...)` as an explicit entry point for important pinned tasks.
 - Keep `orderBy` for choosing the sortable member.
 - Use `sortDirection` for ascending/descending behavior.
 
@@ -141,6 +142,20 @@ Important implementation detail:
 - Parse the member name from the expression and switch over the known sortable members.
 - Reject unsupported expressions with a clear exception.
 
+### Pinned Task Entry Point
+
+Pinned Tasklets are important tasks the product should always be able to show in a dedicated lane.
+
+Implementation consequence:
+
+- Add a storage method that returns only `Pinned == true` Tasklets for a user:
+  - `GetPinnedTaskletsForUserAsync(userId, skip, take, orderBy, sortDirection)`
+- Do not include the free-text `filter` parameter on this method. General search stays on `GetTaskletsForUserAsync(...)`; pinned retrieval is a focused important-task query.
+- Add an authenticated API route in Phase 3:
+  - `GET /api/v1/tasklets/pinned`
+- Return the same `TaskletListResponse` shape as the normal list endpoint so frontend callers can render both lanes with the same response model.
+- Keep `GET /api/v1/tasklets` unchanged; it may still include pinned tasks first, but clients that need the important-task lane should call `/tasklets/pinned`.
+
 ### API Ownership Enforcement
 
 `GetTaskletByIdAsync(Guid id)` and `DeleteTaskletAsync(Guid id)` are not user-scoped. Handlers must enforce ownership.
@@ -148,6 +163,7 @@ Important implementation detail:
 Implementation consequence:
 
 - List uses `GetTaskletsForUserAsync(userId, ...)`.
+- Pinned list uses `GetPinnedTaskletsForUserAsync(userId, ...)`.
 - Get-by-id must return 404 if no task exists or if the task exists but belongs to a different user.
 - Update must fetch the existing task first and return 404 if it does not belong to the user.
 - Delete must fetch first for ownership, then call delete only when the user owns the task.
@@ -158,6 +174,7 @@ Implementation consequence:
 Expose CRUD under the existing authenticated `/api/v1` group:
 
 - `GET /api/v1/tasklets`
+- `GET /api/v1/tasklets/pinned`
 - `GET /api/v1/tasklets/{id:guid}`
 - `POST /api/v1/tasklets`
 - `PUT /api/v1/tasklets/{id:guid}`
@@ -185,7 +202,7 @@ The implementation team should not proceed from Phase 1 to Phase 2, or Phase 2 t
 - Do not stop or restart the whole Aspire AppHost unless `host/Tasklet.AppHost.cs` is changed. This plan should not require AppHost changes.
 - Do not weaken Firebase authorization or make endpoints anonymous.
 - Do not expose `UserId` as a writable API field.
-- Do not make additional storage abstraction changes beyond the approved `SortDirection` parameter unless a phase checkpoint explicitly approves them.
+- Do not make additional storage abstraction changes beyond the approved `SortDirection` parameter and pinned Tasklet entry point unless a phase checkpoint explicitly approves them.
 
 ## Phase 1: Sqlite Storage Provider And Schema
 
@@ -225,11 +242,20 @@ Task<List<Tasklet>> GetTaskletsForUserAsync(
     SortDirection sortDirection = SortDirection.Descending,
     string? filter = null
 );
+
+Task<List<Tasklet>> GetPinnedTaskletsForUserAsync(
+    string userId,
+    int skip = 0,
+    int take = 25,
+    Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+    SortDirection sortDirection = SortDirection.Descending
+);
 ```
 
 Reason:
 
 - API callers should be able to request ascending or descending order without encoding direction into the selected sort field.
+- The application needs a separate pinned entry point because important tasks are rendered as their own always-visible lane.
 
 #### `src/backend/sqlite/SqliteContext.cs`
 
@@ -524,17 +550,23 @@ Required test cases:
 11. `GetTaskletsForUserAsync_DefaultSortsPinnedThenNewest`
     - Seed pinned and unpinned tasks with different created times.
     - Assert pinned comes first and newest order is stable.
-12. `UpdateTaskletAsync_PersistsMutableFields`
+12. `GetPinnedTaskletsForUserAsync_ReturnsOnlyPinnedForRequestedUser`
+    - Seed pinned and unpinned Tasklets for one user and a pinned Tasklet for another user.
+    - Assert only the requested user's pinned Tasklet is returned.
+13. `GetPinnedTaskletsForUserAsync_AppliesPagingAndSortDirection`
+    - Seed multiple pinned Tasklets.
+    - Assert paging and explicit sort direction are honored.
+14. `UpdateTaskletAsync_PersistsMutableFields`
     - Create, update all mutable fields, read back.
     - Assert updates persisted.
-13. `UpdateTaskletAsync_PreservesUserIdAndCreatedAt`
+15. `UpdateTaskletAsync_PreservesUserIdAndCreatedAt`
     - Attempt to update with different `UserId` and `CreatedAtUtc`.
     - Assert original values remain.
-14. `UpdateTaskletAsync_Throws_WhenMissing`
+16. `UpdateTaskletAsync_Throws_WhenMissing`
     - Assert `KeyNotFoundException`.
-15. `DeleteTaskletAsync_ReturnsOne_WhenDeleted`
+17. `DeleteTaskletAsync_ReturnsOne_WhenDeleted`
     - Create, delete, assert count 1 and read returns null.
-16. `DeleteTaskletAsync_ReturnsZero_WhenMissing`
+18. `DeleteTaskletAsync_ReturnsZero_WhenMissing`
     - Delete random ID, assert 0.
 
 ### Phase 1 Verification
@@ -848,6 +880,7 @@ Create one handler class per route, matching the existing runtime convention.
 Recommended files:
 
 - `TaskletCoreEndpoints.Handler.List.cs`
+- `TaskletCoreEndpoints.Handler.Pinned.cs`
 - `TaskletCoreEndpoints.Handler.Get.cs`
 - `TaskletCoreEndpoints.Handler.Create.cs`
 - `TaskletCoreEndpoints.Handler.Update.cs`
@@ -873,6 +906,18 @@ All handlers:
   - `string? filter = null`
 - Validate/normalize paging at API boundary, even though storage also guards it.
 - Call `GetTaskletsForUserAsync(userId, skip, take, sort.ToOrderBy(), direction, filter)`.
+- Return `Ok<TaskletListResponse>`.
+
+`PinnedTaskletsHandler`:
+
+- Parameters:
+  - `ClaimsPrincipal user`
+  - `int skip = 0`
+  - `int take = 25`
+  - `TaskletSortField? sort = null`
+  - `SortDirection direction = SortDirection.Descending`
+- Validate/normalize paging at API boundary, even though storage also guards it.
+- Call `GetPinnedTaskletsForUserAsync(userId, skip, take, sort.ToOrderBy(), direction)`.
 - Return `Ok<TaskletListResponse>`.
 
 `GetTaskletHandler`:
@@ -945,6 +990,10 @@ public void MapEndpoints(IEndpointRouteBuilder app)
         .WithName("ListTasklets")
         .WithDescription("Gets the current user's Tasklets.");
 
+    group.MapGet("/pinned", (..., [FromServices] PinnedTaskletsHandler handler) => handler.Handle(...))
+        .WithName("ListPinnedTasklets")
+        .WithDescription("Gets the current user's pinned Tasklets.");
+
     group.MapGet("/{id:guid}", (..., [FromServices] GetTaskletHandler handler) => handler.Handle(...))
         .WithName("GetTasklet")
         .WithDescription("Gets one Tasklet owned by the current user.");
@@ -991,21 +1040,25 @@ Required test cases:
 2. List calls storage with the authenticated user ID.
 3. List passes sort field and sort direction to storage.
 4. List returns response items mapped from storage.
-5. Get returns unauthorized when no `user_id` claim exists.
-6. Get returns not found when storage returns null.
-7. Get returns not found when task belongs to a different user.
-8. Get returns OK for owned task.
-9. Create returns unauthorized when no `user_id` claim exists.
-10. Create rejects blank title.
-11. Create sets `UserId` from claims and not request body.
-12. Create applies defaults for optional fields.
-13. Update returns not found for missing task.
-14. Update returns not found for task owned by another user.
-15. Update preserves `UserId` and `CreatedAtUtc`.
-16. Update persists mutable fields.
-17. Delete returns not found for missing task.
-18. Delete returns not found for task owned by another user.
-19. Delete calls storage and returns no content for owned task.
+5. Pinned list returns unauthorized when no `user_id` claim exists.
+6. Pinned list calls storage with the authenticated user ID.
+7. Pinned list passes sort field and sort direction to storage.
+8. Pinned list returns response items mapped from storage.
+9. Get returns unauthorized when no `user_id` claim exists.
+10. Get returns not found when storage returns null.
+11. Get returns not found when task belongs to a different user.
+12. Get returns OK for owned task.
+13. Create returns unauthorized when no `user_id` claim exists.
+14. Create rejects blank title.
+15. Create sets `UserId` from claims and not request body.
+16. Create applies defaults for optional fields.
+17. Update returns not found for missing task.
+18. Update returns not found for task owned by another user.
+19. Update preserves `UserId` and `CreatedAtUtc`.
+20. Update persists mutable fields.
+21. Delete returns not found for missing task.
+22. Delete returns not found for task owned by another user.
+23. Delete calls storage and returns no content for owned task.
 
 #### `src/web/src/api/tasklet-api.json`
 

@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
-using Tasklet.Core;
 using Tasklet.Sqlite;
 using TUnit.Core.Interfaces;
 
@@ -10,15 +8,15 @@ namespace Tasklet.Tests.Fixtures;
 /// Database fixture that initializes a Sqlite test database for integration testing.
 /// </summary>
 /// <remarks>
-/// Creates a temporary file-based Sqlite database and initializes the
-/// <see cref="SqliteStorageProvider"/> against it so tests can exercise the full
-/// provider interface without any mocking.  The database file is deleted when the
-/// fixture is disposed.
+/// The storage tests need a real SQLite file because migrations, indexes, LIKE
+/// filters, and deletes should run the same way they do in the app. This fixture
+/// creates one temporary database for the test class, runs provider
+/// initialization once, and gives each test a context pointed at that database.
+/// It deletes the database and SQLite sidecar files when the test run is done.
 /// </remarks>
 public class SqliteDatabaseFixture : IAsyncInitializer, IAsyncDisposable
 {
     private string _dbPath = string.Empty;
-    private SqliteStorageProvider? _provider;
 
     /// <summary>
     /// Connection string for the temporary Sqlite database.
@@ -26,9 +24,12 @@ public class SqliteDatabaseFixture : IAsyncInitializer, IAsyncDisposable
     public string ConnectionString => $"Data Source={_dbPath}";
 
     /// <summary>
-    /// The initialized storage provider under test.
+    /// Creates a provider that uses the supplied context.
     /// </summary>
-    public SqliteStorageProvider Provider => _provider!;
+    /// <param name="context">Context owned by the current test transaction.</param>
+    /// <returns>A provider wired to the supplied context.</returns>
+    public SqliteStorageProvider CreateProvider(SqliteContext context)
+        => new(context, NullLogger<SqliteStorageProvider>.Instance);
 
     /// <summary>
     /// Creates a new context against the temporary Sqlite database.
@@ -41,25 +42,21 @@ public class SqliteDatabaseFixture : IAsyncInitializer, IAsyncDisposable
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"tasklet-test-{Guid.NewGuid():N}.db");
 
-        var options = Options.Create(
-            new AppSettings(
-                Firebase: null,
-                Auth: null,
-                Storage: new StorageSettings(StorageProvider.Sqlite, ConnectionString)
-            )
-        );
+        await using var context = CreateContext();
+        var provider = CreateProvider(context);
 
-        _provider = new SqliteStorageProvider(NullLogger<SqliteStorageProvider>.Instance, options);
-
-        await _provider.InitializeAsync();
+        await provider.InitializeAsync();
     }
 
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        if (File.Exists(_dbPath))
+        foreach (var path in new[] { _dbPath, $"{_dbPath}-shm", $"{_dbPath}-wal" })
         {
-            File.Delete(_dbPath);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
         }
 
         GC.SuppressFinalize(this);

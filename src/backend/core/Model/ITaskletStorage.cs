@@ -21,6 +21,7 @@ public interface ITaskletStorage
     /// Expression over <see cref="ISortableTasklet"/>; use direct property
     /// access only so storage providers can translate it.
     /// </param>
+    /// <param name="sortDirection">Direction used for the requested sort member.</param>
     /// <param name="filter">
     /// Optional provider-translated filter text for searching Tasklets.
     /// </param>
@@ -30,7 +31,28 @@ public interface ITaskletStorage
         int skip = 0,
         int take = 25,
         Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+        SortDirection sortDirection = SortDirection.Descending,
         string? filter = null
+    );
+
+    /// <summary>
+    /// Gets a user's pinned Tasklets with optional paging and sort selection.
+    /// </summary>
+    /// <param name="userId">Owner identifier used to scope the query.</param>
+    /// <param name="skip">Number of matching pinned Tasklets to skip for paging.</param>
+    /// <param name="take">Maximum number of matching pinned Tasklets to return.</param>
+    /// <param name="orderBy">
+    /// Expression over <see cref="ISortableTasklet"/>; use direct property
+    /// access only so storage providers can translate it.
+    /// </param>
+    /// <param name="sortDirection">Direction used for the requested sort member.</param>
+    /// <returns>The requested page of pinned Tasklets owned by the user.</returns>
+    Task<List<Tasklet>> GetPinnedTaskletsForUserAsync(
+        string userId,
+        int skip = 0,
+        int take = 25,
+        Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+        SortDirection sortDirection = SortDirection.Descending
     );
 
     /// <summary>

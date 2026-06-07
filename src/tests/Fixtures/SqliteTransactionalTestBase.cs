@@ -3,16 +3,39 @@ using Tasklet.Sqlite;
 
 namespace Tasklet.Tests.Fixtures;
 
+/// <summary>
+/// Base class for SQLite tests that need rollback after each test.
+/// </summary>
+/// <remarks>
+/// Each test gets its own context and transaction, but all tests share the same
+/// migrated database file from <see cref="SqliteDatabaseFixture"/>. The provider
+/// uses the same context as the test, so every insert, update, and delete is
+/// inside the transaction. Cleanup rolls the transaction back so tests do not
+/// depend on data left behind by earlier tests.
+/// </remarks>
 public abstract class SqliteTransactionalTestBase(SqliteDatabaseFixture fixture)
 {
     private IDbContextTransaction? _transaction;
 
-    protected SqliteContext _context = fixture.CreateContext();
+    /// <summary>
+    /// Context enlisted in the current test transaction.
+    /// </summary>
+    protected SqliteContext Context { get; private set; } = null!;
 
+    /// <summary>
+    /// Storage provider under test, sharing the current transaction context.
+    /// </summary>
+    protected SqliteStorageProvider Provider { get; private set; } = null!;
+
+    /// <summary>
+    /// Opens a context and transaction before each test.
+    /// </summary>
     [Before(Test)]
     public async Task Before()
     {
-        _transaction = await _context.Database.BeginTransactionAsync();
+        Context = fixture.CreateContext();
+        Provider = fixture.CreateProvider(Context);
+        _transaction = await Context.Database.BeginTransactionAsync();
     }
 
     /// <summary>
@@ -27,6 +50,6 @@ public abstract class SqliteTransactionalTestBase(SqliteDatabaseFixture fixture)
             await _transaction.DisposeAsync();
         }
 
-        await _context.DisposeAsync();
+        await Context.DisposeAsync();
     }
 }

@@ -37,7 +37,7 @@ public static class SetupServicesExtensions
                 new AppOptions()
                 {
                     Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = settings.Firebase.ProjectId,
+                    ProjectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id",
                 }
             );
 
@@ -62,7 +62,7 @@ public static class SetupServicesExtensions
                     "api-cors-policy",
                     policy =>
                         policy
-                            .WithOrigins([.. settings.Auth.AllowedCorsOrigins])
+                            .WithOrigins([.. settings.Auth?.AllowedCorsOrigins ?? []])
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .AllowCredentials()
