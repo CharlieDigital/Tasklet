@@ -1,3 +1,5 @@
+using Tasklet.Core.Endpoints;
+
 namespace Tasklet.Runtime.Endpoints;
 
 /// <summary>

@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
-using Tasklet.Runtime.Endpoints;
+using Tasklet.Core;
+using Tasklet.Core.Endpoints;
 
 namespace Tasklet.Runtime.Config;
 

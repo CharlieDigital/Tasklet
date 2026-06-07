@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Tasklet.Core.Endpoints;
 
 namespace Tasklet.Runtime.Endpoints;
 

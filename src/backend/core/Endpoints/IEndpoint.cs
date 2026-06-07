@@ -1,4 +1,6 @@
-namespace Tasklet.Runtime.Endpoints;
+using Microsoft.AspNetCore.Routing;
+
+namespace Tasklet.Core.Endpoints;
 
 /// <summary>
 /// Marker interface for working with minimal API endpoints and simplifying registration.

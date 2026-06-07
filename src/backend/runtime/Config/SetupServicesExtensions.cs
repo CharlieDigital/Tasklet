@@ -8,7 +8,8 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-using Tasklet.Runtime.Endpoints;
+using Tasklet.Core;
+using Tasklet.Core.Endpoints;
 using Tasklet.Runtime.Middleware;
 
 namespace Tasklet.Runtime.Config;

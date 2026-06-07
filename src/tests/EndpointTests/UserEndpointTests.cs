@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Tasklet.Runtime.Endpoints;
 
-namespace Tasklet.Tests;
+namespace Tasklet.Tests.EndpointTests;
 
 /// <summary>
 /// Test cases for the user endpoints

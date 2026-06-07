@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 
-namespace Tasklet.Endpoints;
+namespace Tasklet.Core.Telemetry;
 
 /// <summary>
 /// Provides telemetry functionality for the Tasklet backend.  Adds some convenience methods.
