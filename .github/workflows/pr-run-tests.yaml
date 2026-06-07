@@ -1,0 +1,101 @@
+# This workflow runs the full test project for pull requests.
+
+name: PR Integration Tests
+
+on:
+  # Run the complete test package for every pull request so integration failures
+  # are caught before merging.
+  pull_request:
+
+permissions:
+  # checkout needs read access to the repository contents.
+  contents: read
+
+  # The test report action writes a check run with failure details.
+  checks: write
+
+  # The test report action updates a PR comment with the failed-test summary.
+  pull-requests: write
+
+env:
+  # Keep .NET output compact and consistent in CI logs.
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  integration-tests:
+    name: Run integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Fetch the pull request source under test.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Restore NuGet packages before building/running tests.
+      - name: Restore dependencies
+        run: dotnet restore src/tests/Tasklet.Tests.csproj
+
+      # Build the test project once so compile failures are reported separately
+      # from runtime integration-test failures.
+      - name: Build tests
+        run: dotnet build src/tests/Tasklet.Tests.csproj --no-restore --nologo
+
+      # Run every TUnit test in the test project. The Postgres fixture uses the
+      # supplied connection string instead of building a Testcontainers image.
+      # Microsoft.Testing.Platform uses reporters instead of VSTest loggers, so
+      # --report-trx writes the standard TRX file consumed by reporting actions.
+      - name: Run integration tests
+        id: run-tests
+        continue-on-error: true
+        run: |
+          set +e
+          dotnet run --project src/tests/Tasklet.Tests.csproj \
+            --output detailed \
+            --disable-logo \
+            --results-directory TestResults \
+            --report-trx \
+            --report-trx-filename integration-tests.trx
+          test_exit_code=$?
+          echo "exit-code=${test_exit_code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      # Preserve raw TRX output so failed PRs can be debugged beyond the summary.
+      - name: Upload test result artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+      # Parse TRX output and update the pull request with a concise report.
+      # im-open/process-dotnet-test-results consumes .NET TRX files and turns
+      # them into a GitHub check plus an updatable PR comment with failure details.
+      # See: https://github.com/im-open/process-dotnet-test-results
+      # Failed test details are included directly in the PR comment so reviewers
+      # do not have to dig through the Actions log to identify broken tests.
+      - name: Publish test report
+        id: test-report
+        if: ${{ always() }}
+        uses: im-open/process-dotnet-test-results@v4.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-directory: TestResults
+          create-status-check: true
+          ignore-test-failures: true
+          create-pr-comment: true
+          update-comment-if-one-exists: true
+          comment-identifier: pr-integration-tests
+
+      # Mirror the generated markdown into the Actions job summary. This keeps
+      # the same failure details visible from both the PR and workflow run.
+      - name: Add test report to job summary
+        if: ${{ always() && steps.test-report.outputs.test-results-file-path != '' }}
+        run: cat "${{ steps.test-report.outputs.test-results-file-path }}" >> "$GITHUB_STEP_SUMMARY"
+
+      # Keep the test command as the source of truth for job success after the
+      # artifact and PR comment have been produced.
+      - name: Fail workflow when tests fail
+        if: ${{ steps.run-tests.outputs.exit-code != '0' }}
+        run: exit 1
