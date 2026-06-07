@@ -32,7 +32,7 @@ public static class SomeExtensions
 ## Language Rules and Formatting
 
 - Use Allman style braces; always brace statements
-  - Exception for `using var` for disposables; these do not need to be braced except where necessary
+  - Exception for `using var` and `await using var` for disposables; these do not need to be braced except where necessary
 - 4 space tabs
 - Follow idiomatic C# coding style from learn.microsoft.com
 - When a variable initializer declares a type, use the `new()` expression or a collection initializer `[]` to make the code more terse
@@ -68,6 +68,16 @@ public partial class SomeService(ILogger<SomeService> log)
 
 </high_performance_logging>
 
+## API Development
+
+- Use ASP.NET Core Minimal APIs for web endpoints in `src/backend/runtime/Endpoints`
+- An endpoint like `src/backend/runtime/Endpoints/User/UserEndpoints.cs` isolates the DI boundary and HTTP handling ONLY
+- An `IEndpointHandler` like `src/backend/runtime/Endpoints/User/UserEndpoints.Handler.Me.cs` encapsulates the domain logic; this is our test surface
+  - Handlers are 1:1 with routes in endpoints.  An endpoint class can map many routes to different handlers
+  - Repeated logic should be moved to a `*Service` class that can be injected into handlers; avoid duplicating existing logic (DRY) to avoid flaky behaviors
+  - Tests should operate against the handler or the service, not the endpoint; the endpoint is just the HTTP entry point
+- Boundary models go into a file like `src/backend/runtime/Endpoints/User/UserEndpoints.Models.cs` which can hold many models for the API
+
 ## Unit and Integration Tests with TUnit
 
 - The application uses TUnit for unit and integration tests
@@ -99,6 +109,31 @@ public async Task<string> DoSomethingAsync()
 ```
 
 </example_side_effect_free>
+
+## Sqlite and Entity Framework (EF) Core
+
+### EF Core Provider Limitations
+
+- SQLite doesn't natively support the following data types. EF Core can read and write values of these types, and querying for equality (where e.Property == value) is also supported. Other operations, however, like comparison and ordering will require evaluation on the client.
+  - `DateTimeOffset`
+  - `decimal`
+  - `TimeSpan`
+  - `ulong`
+- Instead of `DateTimeOffset`, use `DateTime` values. When handling multiple time zones, convert the values to UTC before saving and then convert back to the appropriate time zone.
+- Use `double` instead of `decimal`
+- See: <https://learn.microsoft.com/en-us/ef/core/providers/sqlite/limitations>
+
+### FTS5
+
+See: <https://sqlite.org/fts5.html>
+See: <https://www.bricelam.net/2020/08/08/sqlite-fts-and-efcore.html>
+
+### Domain Modeling
+
+- Leverage EF Core field mapping (See: <https://learn.microsoft.com/en-us/ef/core/modeling/backing-field?tabs=data-annotations>) to property encapsulate domain behaviors
+  - This avoids "bag of properties" anemic domain models that can be mutated from anywhere in the code
+  - Use private fields for storage where business rules should encapsulate logic (e.g. changing state should not be allowed directly on the property; use a backing field and a method like `ChangeState(NewState newState)` that encapsulates the logic and rules around state changes)
+  - Encapsulation allows us to keep validation and business rules in one place
 
 ## Good Practices
 

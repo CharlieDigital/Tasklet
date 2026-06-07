@@ -9,6 +9,6 @@
     <PackageReference Include="TUnit" Version="1.50.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\backend\runtime\Tasklet.API.csproj" />
+    <ProjectReference Include="..\backend\runtime\Tasklet.Runtime.csproj" />
   </ItemGroup>
 </Project>

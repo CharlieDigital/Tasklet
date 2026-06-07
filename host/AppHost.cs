@@ -8,7 +8,7 @@ const string FirebaseEmulatorDataVolumeName = "tasklet-firebase-emulator-data";
 
 // The main backend API runtime.
 var backend = builder
-    .AddProject<Projects.Tasklet_API>(name: "tasklet-api")
+    .AddProject<Projects.Tasklet_Runtime>(name: "tasklet-api")
     // .NET Firebase Admin SDK requires environment variable for emulator
     // See: https://firebase.google.com/docs/emulator-suite/connect_auth#admin_sdks
     .WithEnvironment("FIREBASE_AUTH_EMULATOR_HOST", "localhost:9099")
@@ -22,13 +22,14 @@ var backend = builder
     );
 ;
 
-// Standalone watch-build with an environment variable GEN which triggers an OpenAPI schema rebuild for the FE
+// Standalone watch-build that passes an MSBuild property so schema generation
+// works consistently across shells and operating systems.
 var buildGenerate = builder
     .AddExecutable(
         "tasklet-schema-publish",
         "dotnet",
         "../src/backend/runtime",
-        ["watch", "build", "--non-interactive"]
+        ["watch", "build", "--non-interactive", "/p:GenerateSchema=true"]
     )
     .WithEnvironment("GEN", "true");
 

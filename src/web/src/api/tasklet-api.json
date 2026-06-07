@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.1",
   "info": {
-    "title": "Tasklet.API | v1",
+    "title": "Tasklet.Runtime | v1",
     "version": "1.0.0"
   },
   "servers": [

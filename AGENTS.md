@@ -9,6 +9,10 @@
 - Firebase for authentication (with emulator for local development)
 - Aspire for orchestration of runtime resources (stop start the backend, rebuild client OpenAPI clients, etc.)
 
+### Overall Architecture
+
+- READ: `.agents/context/tasklet-architecture.md` is te overall architecture
+
 ### Backend (`src/backend`)
 
 - Before writing code, review the docs!

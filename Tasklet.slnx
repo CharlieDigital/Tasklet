@@ -4,9 +4,15 @@
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/backend/">
-    <Project Path="src/backend/runtime/Tasklet.API.csproj" />
+    <Project Path="src/backend/runtime/Tasklet.Runtime.csproj" />
+  </Folder>
+  <Folder Name="/src/backend/core/">
+    <Project Path="src/backend/core/Tasklet.Core.csproj" />
   </Folder>
   <Folder Name="/src/backend/runtime/" />
+  <Folder Name="/src/backend/sqlite/">
+    <Project Path="src/backend/sqlite/Tasklet.Sqlite.csproj" />
+  </Folder>
   <Folder Name="/src/tests/">
     <Project Path="src/tests/Tasklet.Tests.csproj" />
   </Folder>

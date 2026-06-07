@@ -27,7 +27,7 @@ WORKDIR /srcroot
 COPY --parents ./src/**/*.csproj ./
 
 # Restore dependencies
-RUN dotnet restore ./src/backend/runtime/Tasklet.API.csproj
+RUN dotnet restore ./src/backend/runtime/Tasklet.Runtime.csproj
 
 # Now copy the rest of the source code for the server
 COPY ./src/backend/runtime  ./src/backend/runtime
@@ -36,7 +36,7 @@ COPY ./src/backend/runtime  ./src/backend/runtime
 COPY --from=web-build /srcroot/src/web/dist ./src/backend/runtime/wwwroot/app
 
 # Build the application without restore (already restored above)
-RUN dotnet publish ./src/backend/runtime/Tasklet.API.csproj \
+RUN dotnet publish ./src/backend/runtime/Tasklet.Runtime.csproj \
   --configuration Release \
   --no-restore \
   --output /app/publish
@@ -51,4 +51,4 @@ COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://+:8080
 
-ENTRYPOINT ["dotnet", "Tasklet.API.dll"]
+ENTRYPOINT ["dotnet", "Tasklet.Runtime.dll"]

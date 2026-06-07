@@ -11,6 +11,6 @@
     <PackageReference Include="Aspire.Hosting.Yarp" Version="13.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\backend\runtime\Tasklet.API.csproj" />
+    <ProjectReference Include="..\src\backend\runtime\Tasklet.Runtime.csproj" />
   </ItemGroup>
 </Project>
