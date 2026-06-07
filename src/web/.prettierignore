@@ -1,0 +1,10 @@
+dist
+node_modules
+
+auto-imports.d.ts
+components.d.ts
+typed-router.d.ts
+
+src/api/generated
+src/api/tasklet-api.json
+yarn.lock

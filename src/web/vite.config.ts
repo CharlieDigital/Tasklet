@@ -11,7 +11,7 @@ import UnoCSS from "unocss/vite";
 import path from "path";
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({}) => ({
   plugins: [
     vue(),
     UnoCSS(),
@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
         "vue",
         "pinia",
         "vue-router",
+        "@vueuse/core",
         {
           // See: https://www.naiveui.com/en-US/light/docs/import-on-demand
           "naive-ui": [

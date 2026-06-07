@@ -8,7 +8,7 @@ A v1, production read TODO list!
 |---|---|---|
 |.NET SDK|10|[Download](https://dotnet.microsoft.com/en-us/download)|
 |Node|24|[Download](https://nodejs.org/en/download)|
-|Yarn|4|[Download](https://yarnpkg.com/getting-started/install)|
+|Yarn|1.x|[Download](https://yarnpkg.com/getting-started/install)|
 |Docker|(latest)|[Download](https://www.docker.com/get-started/)|
 
 > I debated on whether to use the Firebase docker container or `npx`, but `npx` run version does not shut down cleanly and will lose the state for stop/restart cycles.`
@@ -45,6 +45,29 @@ This will bring up Aspire with the following key components:
 |`firebase-emulator`|Firebase emulator for auth, running on `http://localhost:9099`|
 |`glider-mcp`|Glider MCP which provides the agent a Roslyn analyzer|
 
+## Prologue
+
+Actually, the hardest part of this exercise was determining what "production ready" means.  The scope of that is really difficult to encapsulate in a weekend project 😅.
+
+For me, it means:
+
+- Operational telemetry and visibility into what the code is doing
+- Efficiency and scalability without complexity (e.g. using cache headers on the static assets to ensure low server load)
+- Relatively good separation and a sensible way to continue to break apart the app (e.g. use of `IEndpoint` and `IEndpointHandler` abstraction to make it easy to separate endpoints out as the application grows
+- Decent abstractions and baselines to make it easy for other developers to work on top of it
+  - Nowadays, this also includes artifacts for AI agents like skills and docs
+- Considerations like security, authentication.
+- A deployment and rollout plan that ensures users can stay online while the application upgrades (for a v1, I like Cloud Run for this because it automates a lot of work like blue/green deploys, gradual rollouts, rollbacks, etc. while still having a good strategy to move to GKE Autopilot or full GKE if needed))
+- Ability to bring the system back online rapidly in case of failures
+- Ability to deploy more instances of the same thing to scale the app.
+  - One downside to using Sqlite in this case is that in a deployed environment, it is not possible to scale this out to multiple server instances
+  - The HA/DR strategy is reliant on file backups or otherwise synchronizing the data out and then back; possibly using a third party vendor with a Sqlite compatible wire protocol that handles this
+  - Using Postgres would have been preferred, but I'm not sure if the exercise specifically wants Sqlite or if it is a constraint of ensuring that the application is runnable without infrastructure setup (but Aspire handles that well)
+
+A simple TODO app can probably be implemented with far less infrastructure and much, much less code, but would also not really meet the criteria of "production ready" as a product without these characteristics.
+
+I feel like the "production" qualifier ended up pushing this from a 2 hour coding task to a 2 day engineering effort 😅
+
 ## Features
 
 - Basic task management: create, read, update, delete tasks
@@ -68,28 +91,33 @@ This will bring up Aspire with the following key components:
 
 ### Backend
 
-- Sqlite is chosen as it provides more capabilities (e.g. full-text search); thought Postgres would have been preferred
+- Sqlite is chosen as it provides more capabilities (e.g. full-text search); though Postgres would have been preferred personally and feels a better fit for a production app supporting multiple instances.
 - .NET minimal web APIs is suitable for this app due to the small surface area
 - Firebase emulator is used for auth as it provides a simple DX for local development and ease of use upstream
 - OpenTelemetry is used to provide observability and insights we will need in production
   - On localhost, this goes to the Aspire dashboard
+- Use standard `ILogger` for this with `Serilog` injected in place (so we can configure it for OTEL sink).
 - No SignalR for this app as it would require backplane in multi-instance scenarios or use of Azure SignalR which adds runtime cost
   - OpenAPI spec to keep it simple and allow for ease of local testing via Scalar UI
   - No multi-player support!
-- Use standard `ILogger` for this instead of `Serilog`; can add later if needed.
 - No Redis or caching for the v0, but possible to add to scale app
 
 ### Frontend
 
-- Vue is chosen for its simplicity
+- Vue is chosen for its simplicity and familiarity
 - NaiveUI is selected as the component library for its rich components, clean design, stylable theme
 - UnoCSS with the Wind4 CSS preset and attributity as this provides front-end teams with familiarity and flexibility in making it prettier 😅
 - Key packages
   - `unplugin-auto-import`: Automatically imports APIs on demand as you use them in templates and scripts, reducing boilerplate and improving DX
   - `unplugin-vue-components`: Automatically imports Vue components as you use them in templates
   - `unplugin-vue-router`: Automatically generates Vue Router routes based on your file system, simplifying navigation setup
+- Firebase is used for auth because it is simple to start, scalable, and comes with a nice emulator for local development.
+  - Other options: OpenIddict, IdentityServer if that needs to be owned infrastructure
+  - Cognito if on AWS (but it is not very ergonomic and heavy to configure)
+  - Entra ID if on Azure (but also heavy to configure and not great for B2C scenarios)
 - No Quasar: I like it better for possible responsive design and mobile support, but that can be a future refinement
 - No FE tests for now; we keep it simple and rely on Playwright to verify during dev
+- No StoryBook; we don't have that many components
 
 ## Deployment
 

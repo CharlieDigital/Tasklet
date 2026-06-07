@@ -1,0 +1,1 @@
+{"required":["status","checkedAt"],"type":"object","properties":{"status":{"type":"string"},"checkedAt":{"type":"string","format":"date-time"}},"description":"Simple healthcheck response","x-readme-ref-name":"HealthResponse"}

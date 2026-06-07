@@ -107,7 +107,7 @@ public static class SetupServicesExtensions
             // TODO(production): Add more instrumentation for EF, HTTP, etc. (too noisy right now)
             services
                 .AddOpenTelemetry()
-                .ConfigureResource(r => r.AddService("biblio").AddAttributes(DefaultAttributes))
+                .ConfigureResource(r => r.AddService("tasklet").AddAttributes(DefaultAttributes))
                 .WithTracing(b =>
                 {
                     b.AddSource(

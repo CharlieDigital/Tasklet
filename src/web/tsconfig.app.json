@@ -8,7 +8,21 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path Aliases */
+    "paths": {
+      "@/*": ["./src/*"] // Alias '@' to the 'src' directory
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    /* For auto-imports and type declarations */
+    "./auto-imports.d.ts",
+    "./components.d.ts",
+    "./typed-router.d.ts",
+    "./shims.d.ts"
+  ]
 }

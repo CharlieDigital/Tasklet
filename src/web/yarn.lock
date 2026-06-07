@@ -704,6 +704,11 @@
   dependencies:
     undici-types "~7.18.0"
 
+"@types/web-bluetooth@^0.0.21":
+  version "0.0.21"
+  resolved "https://registry.yarnpkg.com/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz#525433c784aed9b457aaa0ee3d92aeb71f346b63"
+  integrity sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==
+
 "@unocss/cli@66.7.0":
   version "66.7.0"
   resolved "https://registry.yarnpkg.com/@unocss/cli/-/cli-66.7.0.tgz#d9bd58d1ff84a82a22927b8853ab2961ab4e429c"
@@ -1090,6 +1095,33 @@
   version "0.9.1"
   resolved "https://registry.yarnpkg.com/@vue/tsconfig/-/tsconfig-0.9.1.tgz#6aa901e9f89242b26e1e564c98747278df6882e5"
   integrity sha512-buvjm+9NzLCJL29KY1j1991YYJ5e6275OiK+G4jtmfIb+z4POywbdm0wXusT9adVWqe0xqg70TbI7+mRx4uU9w==
+
+"@vueuse/core@14.3.0", "@vueuse/core@^14.3.0":
+  version "14.3.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-14.3.0.tgz#66c92f9ad7ee989e4a8fd23ec368e55429ea42b2"
+  integrity sha512-aHfz47g0ZhMtTVHmIzMVpJy8ePhhOy68GY5bv110+5DVtZ+W7BsOx+m61UNQqfrWyPztIHIanWa3E2tib3NFIw==
+  dependencies:
+    "@types/web-bluetooth" "^0.0.21"
+    "@vueuse/metadata" "14.3.0"
+    "@vueuse/shared" "14.3.0"
+
+"@vueuse/integrations@^14.3.0":
+  version "14.3.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/integrations/-/integrations-14.3.0.tgz#06ce0431973a0606cc6a69d173f19880652860a6"
+  integrity sha512-76I5FT2ESvCmCaSwapI+a/u/CFtNXmzl9f9lNp1hRtx8vKB8hfiokJr8IvQqcQG5ckGXElyXK516b54ozV3MvA==
+  dependencies:
+    "@vueuse/core" "14.3.0"
+    "@vueuse/shared" "14.3.0"
+
+"@vueuse/metadata@14.3.0":
+  version "14.3.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-14.3.0.tgz#d782b00732d1568503027965c0be92bc1699d76c"
+  integrity sha512-BwxmbAzwAVF50+MW57GXOUEV61nFBGnlBvrTqj49PqWJu3uw7hdu72ztXeZ33RdZtDY6kO+bfCAE1PCn88Tktw==
+
+"@vueuse/shared@14.3.0":
+  version "14.3.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-14.3.0.tgz#a3e7e6391f9ed7f363cbb28c32c4a278efaacbd0"
+  integrity sha512-bZpge9eSXwa4ToSiqJ7j6KRwhAsneMFoSz3LMWKQDkqimm3D/tbFlrklrs/IOqC8tEcYmXQZJ6N0UrjhBirVCg==
 
 acorn@^8.15.0, acorn@^8.16.0:
   version "8.16.0"
@@ -2166,6 +2198,11 @@ postcss@^8.5.15:
     nanoid "^3.3.12"
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
+
+prettier@^3.8.3:
+  version "3.8.3"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.8.3.tgz#560f2de55bf01b4c0503bc629d5df99b9a1d09b0"
+  integrity sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==
 
 quansync@^0.2.11:
   version "0.2.11"
