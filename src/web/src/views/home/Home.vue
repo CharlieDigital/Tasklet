@@ -13,6 +13,21 @@
         <NFlex align="center" gap="small">
           <NTooltip trigger="hover">
             <template #trigger>
+              <NSwitch
+                v-model:value="denseMode"
+                :round="false"
+                size="large"
+                class="task-density-switch"
+                aria-label="Task list density"
+              >
+                <template #checked>Dense</template>
+                <template #unchecked>Normal</template>
+              </NSwitch>
+            </template>
+            {{ denseMode ? "Dense mode" : "Normal mode" }}
+          </NTooltip>
+          <NTooltip trigger="hover">
+            <template #trigger>
               <NButton ghost disabled size="small">
                 <template #icon>
                   <NIcon :component="User" :size="18" />
@@ -80,6 +95,7 @@
                 :loading="pinnedLoading"
                 :quick-add-loading="saving"
                 :error="null"
+                :dense="denseMode"
                 @pin="handlePin"
                 @complete="handleComplete"
                 @edit="openEditTab"
@@ -107,6 +123,7 @@
                 :loading="allLoading"
                 :quick-add-loading="saving"
                 :error="null"
+                :dense="denseMode"
                 @pin="handlePin"
                 @complete="handleComplete"
                 @edit="openEditTab"
@@ -134,6 +151,7 @@
                 :loading="doneLoading"
                 :quick-add-loading="saving"
                 :error="null"
+                :dense="denseMode"
                 @pin="handlePin"
                 @complete="handleComplete"
                 @edit="openEditTab"
@@ -238,6 +256,11 @@ const {
 } = storeToRefs(taskletStore);
 
 const activeTab = ref("pinned");
+/**
+ * Normal cards stay as the default for context-rich scanning; dense mode is an
+ * opt-in table for users who want to compare more tasklets at once.
+ */
+const denseMode = ref(false);
 const editingTaskletIds = ref<string[]>([]);
 const editDirtyById = reactive<Record<string, boolean>>({});
 const createFormKey = ref(0);
@@ -412,6 +435,15 @@ async function runTaskletAction(action: () => Promise<void>) {
 
 .task-home-title {
   margin: 2px 0 0;
+}
+
+.task-density-switch {
+  --n-rail-width: 72px;
+}
+
+:deep(.task-density-switch .n-switch__rail),
+:deep(.task-density-switch .n-switch__button) {
+  border-radius: 4px;
 }
 
 .task-tab-label {

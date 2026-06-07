@@ -8,6 +8,7 @@
       :tasklets="tasklets"
       :loading="loading"
       :quick-add-loading="quickAddLoading"
+      :dense="dense"
       empty-title="No completed tasklets"
       empty-description="Completed tasklets will appear here."
       @pin="emit('pin', $event)"
@@ -28,6 +29,7 @@ defineProps<{
   loading: boolean;
   quickAddLoading: boolean;
   error: string | null;
+  dense: boolean;
 }>();
 
 const emit = defineEmits<{

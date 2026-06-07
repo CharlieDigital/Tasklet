@@ -9,6 +9,7 @@
       :loading="loading"
       :quick-add-loading="quickAddLoading"
       :show-empty-quick-add="true"
+      :dense="dense"
       empty-title="No tasklets"
       empty-description="Create a tasklet to start tracking your work."
       @pin="emit('pin', $event)"
@@ -29,6 +30,7 @@ defineProps<{
   loading: boolean;
   quickAddLoading: boolean;
   error: string | null;
+  dense: boolean;
 }>();
 
 const emit = defineEmits<{

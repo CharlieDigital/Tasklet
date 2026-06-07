@@ -16,89 +16,15 @@
       </template>
 
       <template #header-extra>
-        <NButtonGroup
-          size="small"
-          class="tasklet-actions"
-          :class="{ 'tasklet-actions-visible': isHovered }"
-        >
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                tertiary
-                circle
-                :aria-label="tasklet.pinned ? 'Unpin tasklet' : 'Pin tasklet'"
-                @click="emit('pin', tasklet)"
-              >
-                <template #icon>
-                  <NIcon>
-                    <PinnedOff v-if="tasklet.pinned" />
-                    <Pin v-else />
-                  </NIcon>
-                </template>
-              </NButton>
-            </template>
-            {{ tasklet.pinned ? "Unpin" : "Pin" }}
-          </NTooltip>
-
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                tertiary
-                circle
-                aria-label="Complete tasklet"
-                @click="emit('complete', tasklet)"
-              >
-                <template #icon>
-                  <NIcon>
-                    <Checkbox />
-                  </NIcon>
-                </template>
-              </NButton>
-            </template>
-            Complete
-          </NTooltip>
-
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                tertiary
-                circle
-                aria-label="Edit tasklet"
-                @click="emit('edit', tasklet)"
-              >
-                <template #icon>
-                  <NIcon>
-                    <Edit />
-                  </NIcon>
-                </template>
-              </NButton>
-            </template>
-            Edit
-          </NTooltip>
-
-          <NPopconfirm
-            positive-text="Delete"
-            negative-text="Cancel"
-            @positive-click="emit('delete', tasklet)"
-          >
-            <template #trigger>
-              <NButton
-                tertiary
-                circle
-                type="error"
-                title="Delete"
-                aria-label="Delete tasklet"
-              >
-                <template #icon>
-                  <NIcon>
-                    <Trash />
-                  </NIcon>
-                </template>
-              </NButton>
-            </template>
-            Delete this tasklet?
-          </NPopconfirm>
-        </NButtonGroup>
+        <TaskletActionGroup
+          :tasklet="tasklet"
+          :visible="isHovered"
+          show-on-hover
+          @pin="emit('pin', $event)"
+          @complete="emit('complete', $event)"
+          @edit="emit('edit', $event)"
+          @delete="emit('delete', $event)"
+        />
       </template>
 
       <NText v-if="tasklet.body.trim().length > 0">
@@ -134,14 +60,18 @@
 </template>
 
 <script setup lang="ts">
-import type { Color } from "@/api/generated/types/Color";
-import type { Priority } from "@/api/generated/types/Priority";
-import type { Status } from "@/api/generated/types/Status";
 import type { TaskletResponse } from "@/api/generated/types/TaskletResponse";
+import TaskletActionGroup from "@/views/home/components/TaskletActionGroup.vue";
+import {
+  avatarColors,
+  priorityLabels,
+  priorityTagTypes,
+  statusLabels,
+} from "@/views/home/components/tasklet-display";
 import { useElementHover } from "@vueuse/core";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Checkbox, Edit, Pin, Pinned, PinnedOff, Trash } from "@vicons/tabler";
+import { Pinned } from "@vicons/tabler";
 
 dayjs.extend(relativeTime);
 
@@ -158,44 +88,6 @@ const emit = defineEmits<{
 
 const cardElement = useTemplateRef<HTMLElement>("cardElement");
 const isHovered = useElementHover(cardElement);
-
-const avatarColors: Record<Color, string> = {
-  Amber: "#f59e0b",
-  Lime: "#84cc16",
-  Emerald: "#10b981",
-  Cyan: "#06b6d4",
-  Blue: "#3b82f6",
-  Indigo: "#6366f1",
-  Purple: "#a855f7",
-  Pink: "#ec4899",
-  Rose: "#f43f5e",
-};
-
-const statusLabels: Record<Status, string> = {
-  NotStarted: "Not started",
-  InProgress: "In progress",
-  Completed: "Completed",
-  Blocked: "Blocked",
-};
-
-const priorityLabels: Record<Priority, string> = {
-  Eventually: "Eventually",
-  Low: "Low",
-  Medium: "Medium",
-  High: "High",
-  Critical: "Critical",
-};
-
-const priorityTagTypes: Record<
-  Priority,
-  "default" | "error" | "success" | "warning" | "primary" | "info"
-> = {
-  Eventually: "default",
-  Low: "info",
-  Medium: "primary",
-  High: "warning",
-  Critical: "error",
-};
 
 const avatarColor = computed(() => avatarColors[props.tasklet.color]);
 const statusLabel = computed(() => statusLabels[props.tasklet.status]);
@@ -232,18 +124,6 @@ function formatDate(value: Date | null) {
   flex-shrink: 0;
 }
 
-.tasklet-actions {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease;
-}
-
-.tasklet-actions-visible,
-.tasklet-actions:focus-within {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 @media (max-width: 560px) {
   :deep(.tasklet-thing .n-thing-header) {
     display: grid;
@@ -252,11 +132,6 @@ function formatDate(value: Date | null) {
 
   :deep(.tasklet-thing .n-thing-header__extra) {
     justify-self: start;
-  }
-
-  .tasklet-actions {
-    opacity: 1;
-    pointer-events: auto;
   }
 }
 </style>
