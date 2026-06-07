@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Tasklet.Runtime.Endpoints;
+
+namespace Tasklet.Runtime.Endpoints;
 
 /// <summary>
 /// Gets the current user's information based on the authentication claims.

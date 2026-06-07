@@ -32,7 +32,6 @@ public static class SetupAppExtensions
                 .AllowAnonymous()
                 .WithName("Health")
                 .WithTags("Health")
-                .ExcludeFromDescription()
                 .WithDescription("Gets the health status of the application.");
 
             // Map the other endpoints using the IEndpoint interface for organization.
