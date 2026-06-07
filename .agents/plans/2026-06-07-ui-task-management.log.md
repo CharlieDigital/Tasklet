@@ -85,6 +85,42 @@
   - Delete opens the confirmation popover, posts `DELETE /api/v1/tasklets/{id}`, and refreshes lists back to zero.
   - Browser console is clean after the final pass.
 
+## Quick Add Refinement
+
+- Added reusable `src/web/src/components/TaskletQuickAdd.vue`.
+- Empty Tasklet lists now use `NEmpty`'s `#extra` slot with an `NInputGroup` and ghost Add button.
+- Added Home card footer quick-add, shown only when at least one Tasklet exists.
+- Footer quick-add uses full width; empty-state quick-add stays compact.
+- Quick-add defaults are context-sensitive:
+  - Pinned creates pinned Tasklets.
+  - All and Done create unpinned Tasklets.
+  - Home footer follows the current active tab.
+- Playwright confirmed:
+  - Empty state shows quick-add while the footer is hidden.
+  - Pinned quick-add creates a pinned Tasklet.
+  - All/footer quick-add creates an unpinned Tasklet.
+  - Footer quick-add fills the card footer content width with equal side inset.
+  - Verification Tasklets were deleted and the browser console stayed error-free.
+
+## Component Utility-Class Pass
+
+- Reviewed new `.vue` files under `src/web/src/views/home/components`.
+- Replaced simple custom scoped CSS with UnoCSS/Wind4 utilities:
+  - Tab pane `min-height` and vertical padding.
+  - Tasklet list `min-height` and padding.
+  - Form width, date picker width, action margin, and color swatch layout.
+  - Card radius, avatar shrink behavior, title typography/wrapping, and footer wrapping/gap.
+- Kept `TaskletCard.vue` scoped CSS for Naive UI internals and hover state:
+  - `:deep(...)` selectors for generated `NThing` header layout.
+  - Action button opacity/pointer-event transitions.
+  - Mobile header/action layout.
+- Playwright before/after parity:
+  - Captured before and after screenshots of the same Pinned view.
+  - Verified computed title styles: `font-weight: 600`, `line-height: 21.6px`, `overflow-wrap: anywhere`, `padding-top: 4px`.
+  - Verified task card radius remains `8px`.
+  - Verified footer still wraps with `row-gap: 6px`.
+  - Browser console stayed error-free.
+
 ## Phase 3
 
 - Added the shared create/edit form composable and Tasklet form component.

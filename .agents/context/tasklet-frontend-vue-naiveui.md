@@ -292,11 +292,12 @@ flowchart TD
 
 ### Styling and UnoCSS + Wind4 Preset
 
-- When possible, prefer to use UnoCSS with Wind4 presets via Attributify
-- Only use `<style scoped></style>` when needed
+- When possible, prefer to use UnoCSS with Wind4 presets via Attributify preset
+- Only use `<style scoped></style>` when needed!! Avoid writing custom CSS classes when Wind4 (Tailwind UnoCSS preset) with Attributify can achieve the desired visual with attributes like `mt-4`, `bg-teal-500`, `rounded`, etc.
+- Use `<style>` when:
   - Need to use `:deep` to access child component styles
   - Wind4 with Attributify would not achieve the desired visual
-  - It would be easier/cleaner to do it with CSS rather than a large number of attributes
+  - There is no equivalent utility in Tailwind nor Wind4 preset
 
 <unocss_wind4_attributify_example>
 

@@ -1,20 +1,18 @@
 <template>
-  <NCard ref="cardElement" class="tasklet-card" hoverable>
+  <NCard ref="cardElement" class="!rounded-lg" hoverable>
     <NThing class="tasklet-thing">
       <template #avatar>
-        <NAvatar
-          :size="28"
-          class="tasklet-avatar"
-          :style="{ backgroundColor: avatarColor }"
-        >
-          <NIcon v-if="tasklet.pinned" class="tasklet-avatar-icon" size="15">
+        <NAvatar :size="28" shrink-0 :style="{ backgroundColor: avatarColor }">
+          <NIcon v-if="tasklet.pinned" text-white size="15">
             <Pinned />
           </NIcon>
         </NAvatar>
       </template>
 
       <template #header>
-        <div class="tasklet-title" pt-1>{{ tasklet.title }}</div>
+        <div class="leading-[1.35]" pt-1 wrap-anywhere font-semibold>
+          {{ tasklet.title }}
+        </div>
       </template>
 
       <template #header-extra>
@@ -109,8 +107,13 @@
       <NText v-else depth="3">No notes yet.</NText>
 
       <template #footer>
-        <NFlex class="tasklet-footer" justify="space-between" align="center">
-          <NFlex align="center" size="small" class="tasklet-footer-group">
+        <NFlex
+          flex-wrap
+          class="!gap-y-1.5"
+          justify="space-between"
+          align="center"
+        >
+          <NFlex flex-wrap align="center" size="small">
             <NTag size="small" :bordered="false">{{ statusLabel }}</NTag>
             <NTag size="small" :bordered="false" :type="priorityTagType">
               {{ priorityLabel }}
@@ -118,7 +121,7 @@
             <NText depth="3">Created {{ createdRelative }}</NText>
           </NFlex>
 
-          <NFlex align="center" size="small" class="tasklet-footer-dates">
+          <NFlex flex-wrap ml-auto align="center" size="small">
             <NText v-if="tasklet.dueAtUtc" depth="3">Due {{ dueDate }}</NText>
             <NText v-if="tasklet.completedAtUtc" depth="3">
               Completed {{ completedDate }}
@@ -216,38 +219,6 @@ function formatDate(value: Date | null) {
 </script>
 
 <style scoped>
-.tasklet-card {
-  border-radius: 8px;
-}
-
-.tasklet-avatar {
-  flex-shrink: 0;
-}
-
-.tasklet-avatar-icon {
-  color: white;
-}
-
-.tasklet-title {
-  overflow-wrap: anywhere;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.tasklet-footer {
-  flex-wrap: wrap;
-  row-gap: 6px;
-}
-
-.tasklet-footer-group,
-.tasklet-footer-dates {
-  flex-wrap: wrap;
-}
-
-.tasklet-footer-dates {
-  margin-left: auto;
-}
-
 :deep(.tasklet-thing .n-thing-header) {
   align-items: flex-start;
   gap: 12px;

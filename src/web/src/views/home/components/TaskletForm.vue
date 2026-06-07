@@ -1,5 +1,5 @@
 <template>
-  <NForm class="tasklet-form" :show-feedback="false">
+  <NForm w-full max-w-full :show-feedback="false">
     <NGrid responsive="screen" :cols="12" :x-gap="16" :y-gap="16">
       <NFormItemGi
         :span="12"
@@ -47,7 +47,7 @@
           v-model:value="form.dueAtMs.value"
           type="datetime"
           clearable
-          class="tasklet-form-date"
+          w-full
         />
       </NFormItemGi>
 
@@ -56,7 +56,7 @@
           v-model:value="form.completedAtMs.value"
           type="datetime"
           clearable
-          class="tasklet-form-date"
+          w-full
         />
       </NFormItemGi>
 
@@ -65,7 +65,7 @@
       </NFormItemGi>
     </NGrid>
 
-    <NFlex justify="end" align="center" class="tasklet-form-actions">
+    <NFlex justify="end" align="center" mt-5>
       <NText v-if="form.isDirty.value" depth="3">Unsaved changes</NText>
       <NButton ghost @click="emit('cancel')"> Cancel </NButton>
       <NButton type="primary" :loading="loading" @click="submit">
@@ -168,40 +168,12 @@ function submit() {
 function renderColorLabel(option: SelectOption) {
   const value = option.value as Color;
 
-  return h("span", { class: "tasklet-color-option" }, [
+  return h("span", { class: "inline-flex items-center gap-2" }, [
     h("span", {
-      class: "tasklet-color-option-swatch",
+      class: "inline-block h-3 w-3 rounded-full",
       style: { backgroundColor: swatchColors[value] },
     }),
     option.label as string,
   ]);
 }
 </script>
-
-<style scoped>
-.tasklet-form {
-  width: 100%;
-  max-width: 100%;
-}
-
-.tasklet-form-date {
-  width: 100%;
-}
-
-.tasklet-form-actions {
-  margin-top: 20px;
-}
-
-:deep(.tasklet-color-option) {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-:deep(.tasklet-color-option-swatch) {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-}
-</style>

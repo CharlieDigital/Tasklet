@@ -4,158 +4,211 @@
     while the store/API boundary is introduced in a later phase.
   -->
   <section class="task-home">
-    <NCard class="task-home-card" content-class="task-home-card-content">
-      <div class="task-home-header">
-        <div>
-          <div class="task-home-eyebrow">Signed in as {{ displayName }}</div>
-          <NH2 class="task-home-title">Tasklets</NH2>
-        </div>
-      </div>
+    <NCard
+      class="task-home-card"
+      content-class="task-home-card-content"
+      title="Tasks"
+    >
+      <template #header-extra>
+        <NFlex align="center" gap="small">
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton ghost disabled size="small">
+                <template #icon>
+                  <NIcon :component="User" :size="18" />
+                </template>
+              </NButton>
+            </template>
+            {{ displayName }}
+          </NTooltip>
+          <NPopconfirm
+            positive-text="Logout"
+            negative-text="Cancel"
+            @positive-click="handleLogout"
+          >
+            <template #trigger>
+              <NButton
+                ghost
+                size="small"
+                aria-label="Logout"
+                :loading="loginLoading"
+              >
+                <template #icon>
+                  <NIcon :component="Logout" />
+                </template>
+              </NButton>
+            </template>
+            Sign out of Tasklet?
+          </NPopconfirm>
+        </NFlex>
+      </template>
 
-      <NAlert
-        v-if="taskletError"
-        type="error"
-        closable
-        class="task-home-alert"
-        @close="taskletStore.clearError"
-      >
-        {{ taskletError }}
-      </NAlert>
-
-      <NTabs
-        v-model:value="activeTab"
-        type="line"
-        animated
-        class="task-tabs"
-        @close="handleCloseEditTab"
-      >
-        <NTabPane name="pinned">
-          <template #tab>
-            <span class="task-tab-label">
-              Pinned
-              <span class="task-tab-count">
-                {{ pinnedCount }}
-              </span>
-            </span>
-          </template>
-          <NScrollbar
-            trigger="hover"
-            class="task-pane-scroll"
-            content-class="task-pane-scroll-content"
-          >
-            <PinnedTaskletsTab
-              :tasklets="pinnedTasklets"
-              :loading="pinnedLoading"
-              :error="null"
-              @pin="handlePin"
-              @complete="handleComplete"
-              @edit="openEditTab"
-              @delete="handleDelete"
-            />
-          </NScrollbar>
-        </NTabPane>
-        <NTabPane name="all">
-          <template #tab>
-            <span class="task-tab-label">
-              All
-              <span class="task-tab-count">
-                {{ allCount }}
-              </span>
-            </span>
-          </template>
-          <NScrollbar
-            trigger="hover"
-            class="task-pane-scroll"
-            content-class="task-pane-scroll-content"
-          >
-            <AllTaskletsTab
-              :tasklets="activeTasklets"
-              :loading="allLoading"
-              :error="null"
-              @pin="handlePin"
-              @complete="handleComplete"
-              @edit="openEditTab"
-              @delete="handleDelete"
-            />
-          </NScrollbar>
-        </NTabPane>
-        <NTabPane name="done">
-          <template #tab>
-            <span class="task-tab-label">
-              Done
-              <span class="task-tab-count">
-                {{ doneCount }}
-              </span>
-            </span>
-          </template>
-          <NScrollbar
-            trigger="hover"
-            class="task-pane-scroll"
-            content-class="task-pane-scroll-content"
-          >
-            <DoneTaskletsTab
-              :tasklets="doneTasklets"
-              :loading="doneLoading"
-              :error="null"
-              @pin="handlePin"
-              @complete="handleComplete"
-              @edit="openEditTab"
-              @delete="handleDelete"
-            />
-          </NScrollbar>
-        </NTabPane>
-        <NTabPane name="create" tab="Create">
-          <NScrollbar
-            trigger="hover"
-            class="task-pane-scroll"
-            content-class="task-pane-scroll-content"
-          >
-            <CreateTaskletTab
-              :key="createFormKey"
-              :loading="saving"
-              @submit="handleCreate"
-              @cancel="activeTab = 'pinned'"
-            />
-          </NScrollbar>
-        </NTabPane>
-        <NTabPane
-          v-for="tasklet in editingTasklets"
-          :key="tasklet.id"
-          :name="editTabName(tasklet.id)"
+      <template #default>
+        <NAlert
+          v-if="taskletError"
+          type="error"
           closable
+          class="task-home-alert"
+          @close="taskletStore.clearError"
         >
-          <template #tab>
-            <span class="task-tab-label task-tab-edit-label">
-              {{ tasklet.title }}
-              <span v-if="editDirtyById[tasklet.id]" class="task-tab-dirty">
-                <span class="task-tab-dirty-dot" />
-              </span>
-            </span>
-          </template>
+          {{ taskletError }}
+        </NAlert>
 
-          <NScrollbar
-            trigger="hover"
-            class="task-pane-scroll"
-            content-class="task-pane-scroll-content"
+        <NTabs
+          v-model:value="activeTab"
+          type="line"
+          animated
+          class="task-tabs"
+          @close="handleCloseEditTab"
+        >
+          <NTabPane name="pinned">
+            <template #tab>
+              <span class="task-tab-label">
+                Pinned
+                <span class="task-tab-count">
+                  {{ pinnedCount }}
+                </span>
+              </span>
+            </template>
+            <NScrollbar
+              trigger="hover"
+              class="task-pane-scroll"
+              content-class="task-pane-scroll-content"
+            >
+              <PinnedTaskletsTab
+                :tasklets="pinnedTasklets"
+                :loading="pinnedLoading"
+                :quick-add-loading="saving"
+                :error="null"
+                @pin="handlePin"
+                @complete="handleComplete"
+                @edit="openEditTab"
+                @delete="handleDelete"
+                @quick-add="handleQuickCreate($event, true)"
+              />
+            </NScrollbar>
+          </NTabPane>
+          <NTabPane name="all">
+            <template #tab>
+              <span class="task-tab-label">
+                All
+                <span class="task-tab-count">
+                  {{ allCount }}
+                </span>
+              </span>
+            </template>
+            <NScrollbar
+              trigger="hover"
+              class="task-pane-scroll"
+              content-class="task-pane-scroll-content"
+            >
+              <AllTaskletsTab
+                :tasklets="activeTasklets"
+                :loading="allLoading"
+                :quick-add-loading="saving"
+                :error="null"
+                @pin="handlePin"
+                @complete="handleComplete"
+                @edit="openEditTab"
+                @delete="handleDelete"
+                @quick-add="handleQuickCreate($event, false)"
+              />
+            </NScrollbar>
+          </NTabPane>
+          <NTabPane name="done">
+            <template #tab>
+              <span class="task-tab-label">
+                Done
+                <span class="task-tab-count">
+                  {{ doneCount }}
+                </span>
+              </span>
+            </template>
+            <NScrollbar
+              trigger="hover"
+              class="task-pane-scroll"
+              content-class="task-pane-scroll-content"
+            >
+              <DoneTaskletsTab
+                :tasklets="doneTasklets"
+                :loading="doneLoading"
+                :quick-add-loading="saving"
+                :error="null"
+                @pin="handlePin"
+                @complete="handleComplete"
+                @edit="openEditTab"
+                @delete="handleDelete"
+                @quick-add="handleQuickCreate($event, false)"
+              />
+            </NScrollbar>
+          </NTabPane>
+          <NTabPane name="create" tab="New">
+            <NScrollbar
+              trigger="hover"
+              class="task-pane-scroll"
+              content-class="task-pane-scroll-content"
+            >
+              <CreateTaskletTab
+                :key="createFormKey"
+                :loading="saving"
+                @submit="handleCreate"
+                @cancel="activeTab = 'pinned'"
+              />
+            </NScrollbar>
+          </NTabPane>
+          <NTabPane
+            v-for="tasklet in editingTasklets"
+            :key="tasklet.id"
+            :name="editTabName(tasklet.id)"
+            closable
           >
-            <EditTaskletTab
-              :tasklet="tasklet"
-              :loading="saving"
-              @submit="handleEdit(tasklet.id, $event)"
-              @cancel="closeEditTab(tasklet.id)"
-              @dirty-change="setEditDirty(tasklet.id, $event)"
-            />
-          </NScrollbar>
-        </NTabPane>
-      </NTabs>
+            <template #tab>
+              <span class="task-tab-label task-tab-edit-label">
+                {{ tasklet.title }}
+                <span v-if="editDirtyById[tasklet.id]" class="task-tab-dirty">
+                  <span class="task-tab-dirty-dot" />
+                </span>
+              </span>
+            </template>
+
+            <NScrollbar
+              trigger="hover"
+              class="task-pane-scroll"
+              content-class="task-pane-scroll-content"
+            >
+              <EditTaskletTab
+                :tasklet="tasklet"
+                :loading="saving"
+                @submit="handleEdit(tasklet.id, $event)"
+                @cancel="closeEditTab(tasklet.id)"
+                @dirty-change="setEditDirty(tasklet.id, $event)"
+              />
+            </NScrollbar>
+          </NTabPane>
+        </NTabs>
+      </template>
+
+      <template v-if="showFooterQuickAdd" #footer>
+        <TaskletQuickAdd
+          full-width
+          :loading="saving"
+          placeholder="Add another tasklet"
+          button-label="Add"
+          @submit="handleQuickCreate($event, activeTab === 'pinned')"
+        />
+      </template>
     </NCard>
   </section>
 </template>
 
 <script setup lang="ts">
+import { colorEnum } from "@/api/generated/types/Color";
 import type { CreateTaskletRequest } from "@/api/generated/types/CreateTaskletRequest";
+import { priorityEnum } from "@/api/generated/types/Priority";
+import { statusEnum } from "@/api/generated/types/Status";
 import type { TaskletResponse } from "@/api/generated/types/TaskletResponse";
 import type { UpdateTaskletRequest } from "@/api/generated/types/UpdateTaskletRequest";
+import TaskletQuickAdd from "@/components/TaskletQuickAdd.vue";
 import AllTaskletsTab from "@/views/home/components/AllTaskletsTab.vue";
 import CreateTaskletTab from "@/views/home/components/CreateTaskletTab.vue";
 import DoneTaskletsTab from "@/views/home/components/DoneTaskletsTab.vue";
@@ -163,9 +216,11 @@ import EditTaskletTab from "@/views/home/components/EditTaskletTab.vue";
 import PinnedTaskletsTab from "@/views/home/components/PinnedTaskletsTab.vue";
 import { useAppStore } from "@/stores/app-store";
 import { useTaskletStore } from "@/stores/tasklet-store";
+import { Logout, User } from "@vicons/tabler";
 
 const appStore = useAppStore();
-const { displayName } = storeToRefs(appStore);
+const router = useRouter();
+const { displayName, loginLoading } = storeToRefs(appStore);
 const taskletStore = useTaskletStore();
 const {
   allTasklets,
@@ -205,6 +260,10 @@ const editingTasklets = computed(() =>
     .map((id) => taskletsById.value.get(id))
     .filter((tasklet): tasklet is TaskletResponse => tasklet !== undefined),
 );
+const hasAnyTasklet = computed(() => allTasklets.value.length > 0);
+const showFooterQuickAdd = computed(
+  () => hasAnyTasklet.value && activeTab.value !== "done",
+);
 
 onMounted(() => {
   void taskletStore.loadTasklets();
@@ -212,6 +271,14 @@ onMounted(() => {
 
 function editTabName(id: string) {
   return `edit:${id}`;
+}
+
+/**
+ * Keep sign-out on the Logout route so header actions and direct navigation
+ * share the same auth guard behavior.
+ */
+async function handleLogout() {
+  await router.push({ name: "Logout" });
 }
 
 function openEditTab(tasklet: TaskletResponse) {
@@ -263,11 +330,38 @@ async function handleDelete(tasklet: TaskletResponse) {
 }
 
 async function handleCreate(request: CreateTaskletRequest) {
+  await createTasklet(request, "all");
+}
+
+async function createTasklet(
+  request: CreateTaskletRequest,
+  nextTab: string | null,
+) {
   await runTaskletAction(async () => {
     await taskletStore.createTasklet(request);
     createFormKey.value += 1;
-    activeTab.value = "all";
+
+    if (nextTab !== null) {
+      activeTab.value = nextTab;
+    }
   });
+}
+
+async function handleQuickCreate(title: string, pinned: boolean) {
+  await createTasklet(
+    {
+      title,
+      body: null,
+      status: statusEnum.NotStarted,
+      priority: priorityEnum.Medium,
+      explicitOrder: null,
+      pinned,
+      color: colorEnum.Emerald,
+      completedAtUtc: null,
+      dueAtUtc: null,
+    },
+    null,
+  );
 }
 
 async function handleEdit(id: string, request: UpdateTaskletRequest) {
@@ -316,11 +410,6 @@ async function runTaskletAction(action: () => Promise<void>) {
   margin-top: 16px;
 }
 
-.task-home-eyebrow {
-  color: var(--n-text-color-3);
-  font-size: 13px;
-}
-
 .task-home-title {
   margin: 2px 0 0;
 }
@@ -339,7 +428,7 @@ async function runTaskletAction(action: () => Promise<void>) {
   border-radius: 999px;
   background: #059669;
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
 }

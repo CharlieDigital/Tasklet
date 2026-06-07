@@ -43,6 +43,8 @@ app.Logger.LogInformation("Initializing Tasklet storage.");
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
+    // Ru n storage initialization logic, which applies any pending migrations,
+    // index setup, etc.  Storage implementation is responsible for idempotency.
     var storage = scope.ServiceProvider.GetRequiredService<ITaskletStorage>();
     await storage.InitializeAsync();
 }

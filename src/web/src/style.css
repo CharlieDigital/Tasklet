@@ -1,3 +1,8 @@
 body {
   margin: 0;
 }
+
+/* Don't show the warning */
+.firebase-emulator-warning {
+  opacity: 0.15 !important;
+}

@@ -1,5 +1,5 @@
 <template>
-  <div class="tasklet-tab-pane">
+  <div min-h-full py-4>
     <TaskletForm
       mode="create"
       :loading="loading"
@@ -23,10 +23,3 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 </script>
-
-<style scoped>
-.tasklet-tab-pane {
-  min-height: 100%;
-  padding: 16px 0;
-}
-</style>

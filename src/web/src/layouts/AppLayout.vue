@@ -1,39 +1,10 @@
 <!--
-Main outer chrome for the app including the sidebar and header.
+Main outer chrome for the app. Navigation for this slice lives inside the
+current view, so the shell keeps only the top-level application header.
 -->
 
 <template>
-  <NLayout has-sider class="app-layout">
-    <NLayoutSider
-      bordered
-      show-trigger="bar"
-      collapse-mode="width"
-      content-style="height: 100vh"
-      :collapsed-width="64"
-      :width="240"
-      :native-scrollbar="false"
-      default-collapsed
-    >
-      <NSpace justify="space-between" vertical h-full>
-        <!-- Left menu: key is the route path; @update:value pushes to router -->
-        <NMenu
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="leftMenuOptions"
-          :value="route.path"
-          @update:value="handleMenuUpdate"
-        />
-
-        <!-- Bottom menu -->
-        <NMenu
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          :options="bottomMenuOptions"
-          :value="route.path"
-          @update:value="handleMenuUpdate"
-        />
-      </NSpace>
-    </NLayoutSider>
+  <NLayout class="app-layout">
     <NLayout>
       <!-- Right side content header -->
       <NLayoutHeader bordered class="app-layout-header" position="absolute">
@@ -69,8 +40,6 @@ import {
   NLayout,
   NLayoutHeader,
   NLayoutContent,
-  NLayoutSider,
-  NMenu,
   NSpace,
   NButton,
   NButtonGroup,
@@ -78,18 +47,11 @@ import {
 import { Sun, Moon } from "@vicons/tabler";
 import { useAppStore } from "@/stores/app-store";
 
-const router = useRouter();
-const route = useRoute();
 const appStore = useAppStore();
 
 useTitle("Tasklet");
 
-const { leftMenuOptions, bottomMenuOptions, isDarkMode } =
-  storeToRefs(appStore);
-
-async function handleMenuUpdate(value: string) {
-  await router.push(value);
-}
+const { isDarkMode } = storeToRefs(appStore);
 </script>
 
 <style lang="scss" scoped>
