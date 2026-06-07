@@ -18,12 +18,27 @@ const defaultListParams = {
  * task state as props and report user actions through emits.
  */
 export const useTaskletStore = defineStore("tasklet", () => {
+  /**
+   * Each tab owns an API-shaped list because Pinned, Done, and All have
+   * different server filters. Derived views can layer on top without
+   * weakening the store/API boundary.
+   */
   const allTasklets = ref<TaskletResponse[]>([]);
   const pinnedTasklets = ref<TaskletResponse[]>([]);
   const doneTasklets = ref<TaskletResponse[]>([]);
+
+  /**
+   * Separate list loading flags let each tab show local progress while the
+   * store refreshes every collection after mutations.
+   */
   const allLoading = ref(false);
   const pinnedLoading = ref(false);
   const doneLoading = ref(false);
+
+  /**
+   * Mutations share one saving flag because quick actions can move tasklets
+   * between tabs, and the UI should avoid stacking conflicting writes.
+   */
   const saving = ref(false);
   const deletingIds = ref<Set<string>>(new Set());
   const taskletError = ref<string | null>(null);
@@ -80,6 +95,10 @@ export const useTaskletStore = defineStore("tasklet", () => {
     }
   }
 
+  /**
+   * Refresh every list together so a single mutation can move a Tasklet
+   * between Pinned, All, and Done without leaving sibling tabs stale.
+   */
   async function loadTasklets() {
     clearError();
 
@@ -90,6 +109,10 @@ export const useTaskletStore = defineStore("tasklet", () => {
     ]);
   }
 
+  /**
+   * Requery after creation because ordering and server defaults are owned by
+   * the API, not by optimistic client-side inserts.
+   */
   async function createTasklet(request: CreateTaskletRequest) {
     saving.value = true;
     clearError();
@@ -105,6 +128,10 @@ export const useTaskletStore = defineStore("tasklet", () => {
     }
   }
 
+  /**
+   * Full edits can affect any tab filter, so the store reloads the canonical
+   * lists instead of trying to patch local arrays in place.
+   */
   async function updateTasklet(id: string, request: UpdateTaskletRequest) {
     saving.value = true;
     clearError();
@@ -164,6 +191,10 @@ export const useTaskletStore = defineStore("tasklet", () => {
     }
   }
 
+  /**
+   * Deletion tracks ids with a replaced Set so Vue sees the ref change even
+   * when only membership changes inside the collection.
+   */
   async function deleteTasklet(id: string) {
     deletingIds.value = new Set([...deletingIds.value, id]);
     clearError();
@@ -212,6 +243,10 @@ export const useTaskletStore = defineStore("tasklet", () => {
   };
 });
 
+/**
+ * Generated API clients deserialize date-time values loosely; normalizing at
+ * the store boundary keeps components working with Date objects.
+ */
 function normalizeTaskletDates(tasklets: TaskletResponse[]) {
   return tasklets.map((tasklet) => ({
     ...tasklet,
@@ -221,6 +256,10 @@ function normalizeTaskletDates(tasklets: TaskletResponse[]) {
   }));
 }
 
+/**
+ * Datetime values from SQLite may arrive without a zone marker. Treat those as
+ * UTC to match the API field names and avoid browser-local reinterpretation.
+ */
 function normalizeRequiredDate(value: Date | string) {
   if (typeof value !== "string") {
     return new Date(value);
@@ -229,14 +268,25 @@ function normalizeRequiredDate(value: Date | string) {
   return new Date(hasTimeZoneOffset(value) ? value : `${value}Z`);
 }
 
+/**
+ * Optional Tasklet timestamps keep null as a meaningful "not set" state while
+ * sharing the same UTC normalization as required timestamps.
+ */
 function normalizeDate(value: Date | string | null) {
   return value === null ? null : normalizeRequiredDate(value);
 }
 
+/**
+ * Only append "Z" when the payload has no explicit timezone information.
+ */
 function hasTimeZoneOffset(value: string) {
   return /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
 }
 
+/**
+ * Keep error mapping simple for now: generated client failures already carry
+ * useful messages, and the fallback is reserved for non-Error throws.
+ */
 function toUserError(error: unknown) {
   if (error instanceof Error && error.message.trim().length > 0) {
     return error.message;

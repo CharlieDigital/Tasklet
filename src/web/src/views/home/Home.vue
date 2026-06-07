@@ -258,9 +258,10 @@ const {
 const activeTab = ref("pinned");
 /**
  * Normal cards stay as the default for context-rich scanning; dense mode is an
- * opt-in table for users who want to compare more tasklets at once.
+ * opt-in table for users who want to compare more tasklets at once. Persist the
+ * choice because density is a personal scanning preference, not session state.
  */
-const denseMode = ref(false);
+const denseMode = useStorage("taskletDenseMode", false);
 const editingTaskletIds = ref<string[]>([]);
 const editDirtyById = reactive<Record<string, boolean>>({});
 const createFormKey = ref(0);
