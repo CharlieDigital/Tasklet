@@ -48,7 +48,7 @@ public static class SomeExtensions
   - This requires that classes are `partial` and these methods are `partial`
 - Logging is visible in Aspire MCP for `tasklet-api`
 - Logging is connected to OTEL traces and spans as well; use both together
-- Use traces, spans, and events where it is improves the visibility of the call flow and for troubleshooting (see `TaskletApiTelemetry.cs` for example)
+- Use traces, spans, and events where it is improves the visibility of the call flow and for troubleshooting (see `TaskletTelemetry.cs` for example)
 
 <high_performance_logging>
 

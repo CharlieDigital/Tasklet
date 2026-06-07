@@ -1,87 +1,15 @@
-using System.Text.Json.Serialization;
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
 using Tasklet.Runtime.Endpoints;
 
-namespace Tasklet.Runtime;
+namespace Tasklet.Runtime.Config;
 
 /// <summary>
 /// Extension methods for setup.
 /// </summary>
-public static class SetupExtensions
+public static class SetupAppExtensions
 {
-    // Extension methods for the IServiceCollection to set up services.
-    extension(IServiceCollection services)
-    {
-        /// <summary>
-        /// Sets up Firebase Admin SDK for authentication.
-        /// </summary>
-        public IServiceCollection AddFirebaseAuthentication(AppSettings settings)
-        {
-            FirebaseApp.Create(
-                new AppOptions()
-                {
-                    Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = settings.Firebase.ProjectId,
-                }
-            );
-
-            return services;
-        }
-
-        /// <summary>
-        /// Sets up HTTP pipeline for Tasklet
-        /// </summary>
-        public IServiceCollection AddTaskletHttp(AppSettings settings)
-        {
-            // CORS config consumed later...
-            services.AddCors(options =>
-                options.AddPolicy(
-                    "api-cors-policy",
-                    policy =>
-                        policy
-                            .WithOrigins([.. settings.Auth.AllowedCorsOrigins])
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials()
-                )
-            );
-
-            services.AddAuthorization();
-
-            // Configure JSON options for consistent serialization across the app.
-            services.ConfigureHttpJsonOptions(json =>
-            {
-                json.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                json.SerializerOptions.PropertyNameCaseInsensitive = true;
-                json.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
-            });
-
-            // Just in case we need it.
-            services.AddHttpContextAccessor();
-
-            // Register all IEndpoint implementations for automatic endpoint mapping.
-            services.Scan(scan =>
-                scan.FromAssemblyOf<Program>()
-                    // Register all IEndpoint instances
-                    .AddClasses(classes => classes.AssignableTo<IEndpoint>())
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime()
-                    // Now register all of the handlers
-                    // Handlers are injected by concrete type via [FromServices], so
-                    // they must be registered as self rather than by interface.
-                    .AddClasses(classes => classes.AssignableTo<IEndpointHandler>())
-                    .AsSelf()
-                    .WithTransientLifetime()
-            );
-
-            return services;
-        }
-    }
-
     // Extension methods for the WebApplication to set up the HTTP pipeline.
     extension(WebApplication app)
     {
@@ -138,13 +66,13 @@ public static class SetupExtensions
 
                 // Vue SPA served from root
                 app.UseDefaultFiles(
-                    new DefaultFilesOptions { RequestPath = "/", FileProvider = appFileProvider }
+                    new DefaultFilesOptions { RequestPath = "", FileProvider = appFileProvider }
                 );
 
                 app.UseStaticFiles(
                     new StaticFileOptions
                     {
-                        RequestPath = "/",
+                        RequestPath = "",
                         FileProvider = appFileProvider,
                         OnPrepareResponse = ConfigureStaticFileCaching,
                     }
@@ -179,4 +107,7 @@ public static class SetupExtensions
     }
 }
 
+/// <summary>
+/// Simple healthcheck response
+/// </summary>
 internal record HealthResponse(string Status, DateTimeOffset CheckedAt);

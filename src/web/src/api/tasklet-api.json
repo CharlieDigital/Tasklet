@@ -9,5 +9,54 @@
       "url": "http://api.localhost:8089/api"
     }
   ],
-  "paths": { }
+  "paths": {
+    "/v1/me": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "Gets the current user's information.",
+        "operationId": "Me",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserInfoResponse": {
+        "required": [
+          "userId",
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "The ID of the user."
+          },
+          "email": {
+            "type": "string",
+            "description": "The email of the user."
+          }
+        },
+        "description": "A record representing user information returned by the /me endpoint."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "User"
+    }
+  ]
 }

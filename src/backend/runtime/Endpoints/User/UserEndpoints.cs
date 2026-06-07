@@ -14,20 +14,11 @@ public class UserEndpoints : IEndpoint
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/me",
-            (HttpRequest httpRequest, CancellationToken cancellationToken) =>
-            {
-                var user = httpRequest.HttpContext?.User;
-                var userId = user?.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value;
-                var email = user?.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
-
-                if (userId == null || email == null)
-                {
-                    return Results.Unauthorized();
-                }
-
-                return Results.Ok(new { UserId = userId, Email = email });
-            }
-        );
+                "/me",
+                (ClaimsPrincipal user, [FromServices] GetMeHandler handler) => handler.Handle(user)
+            )
+            .WithName("Me")
+            .WithTags("User")
+            .WithDescription("Gets the current user's information.");
     }
 }

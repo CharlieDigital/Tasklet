@@ -1,0 +1,1 @@
+{"required":["userId","email"],"type":"object","properties":{"userId":{"type":"string","description":"The ID of the user."},"email":{"type":"string","description":"The email of the user."}},"description":"A record representing user information returned by the /me endpoint.","x-readme-ref-name":"UserInfoResponse"}

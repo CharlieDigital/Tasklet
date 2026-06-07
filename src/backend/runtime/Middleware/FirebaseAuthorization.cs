@@ -1,73 +1,82 @@
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 using FirebaseAdmin.Auth;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
 namespace Tasklet.Runtime.Middleware;
 
 /// <summary>
-/// Attribute that applies the Firebase authorization check.
+/// Authentication options for Firebase bearer token validation.
 /// </summary>
-public class FirebaseAuthorizationAttribute : TypeFilterAttribute
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FirebaseAuthorizationAttribute"/> class.
-    /// </summary>
-    public FirebaseAuthorizationAttribute()
-        : base(typeof(FirebaseAuthorizationFilter)) { }
-}
+public class FirebaseAuthenticationOptions : AuthenticationSchemeOptions;
 
 /// <summary>
-/// Authorization filter which will ensure that the call includes a valid Firebase
-/// auth token.
-///
-/// See: https://firebase.google.com/docs/auth/admin/verify-id-tokens
-/// See: https://firebase.google.com/docs/emulator-suite/connect_auth#environment-variable
+/// ASP.NET Core authentication handler that validates Firebase ID tokens.
 /// </summary>
-public class FirebaseAuthorizationFilter(ILogger<FirebaseAuthorizationFilter> logger)
-    : IAuthorizationFilter
+public class FirebaseAuthenticationHandler(
+    IOptionsMonitor<FirebaseAuthenticationOptions> options,
+    ILoggerFactory loggerFactory,
+    UrlEncoder encoder
+) : AuthenticationHandler<FirebaseAuthenticationOptions>(options, loggerFactory, encoder)
 {
     /// <summary>
-    /// Verify that the user has a valid authentication token on the call.
+    /// The authentication scheme used for Firebase bearer tokens.
     /// </summary>
-    public void OnAuthorization(AuthorizationFilterContext context)
-    {
-        var headers = context.HttpContext.Request.Headers;
+    public const string SchemeName = "Firebase";
 
-        if (!headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
+    /// <summary>
+    /// Authenticates the request by validating the Firebase bearer token.
+    /// </summary>
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (!Request.Headers.TryGetValue(HeaderNames.Authorization, out var authorizationHeader))
         {
-            context.Result = new UnauthorizedObjectResult("Missing authorization header");
-            return;
+            return AuthenticateResult.NoResult();
+        }
+
+        var authorization = authorizationHeader.FirstOrDefault();
+
+        if (
+            authorization == null
+            || !authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return AuthenticateResult.Fail("Authorization header must use the Bearer scheme.");
+        }
+
+        var token = authorization["Bearer ".Length..].Trim();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return AuthenticateResult.Fail("Bearer token is empty.");
         }
 
         try
         {
-            var token = (authorizationHeader.First() ?? "")[7..];
+            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
 
-            var decodedTokenClaims = FirebaseAuth
-                .DefaultInstance.VerifyIdTokenAsync(token)
-                .Result.Claims;
+            var claims = decodedToken.Claims.Select(claim => new Claim(
+                claim.Key,
+                Convert.ToString(claim.Value) ?? ""
+            ));
 
-            var claims = new List<Claim>();
+            var identity = new ClaimsIdentity(claims, SchemeName);
 
-            claims.AddRange(
-                decodedTokenClaims.Select(c => new Claim(c.Key, Convert.ToString(c.Value) ?? ""))
-            );
+            if (!identity.HasClaim(claim => claim.Type == "user_id"))
+            {
+                identity.AddClaim(new Claim("user_id", decodedToken.Uid));
+            }
 
-            var localIdentity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, SchemeName);
 
-            context.HttpContext.User.AddIdentity(localIdentity);
+            return AuthenticateResult.Success(ticket);
         }
         catch (Exception ex)
         {
-            logger.LogError(
-                ex,
-                "Failed to decode the token: {Token}",
-                headers.Authorization.First() ?? ""
-            );
-
-            context.Result = new UnauthorizedObjectResult("Token validation failed with an error.");
+            return AuthenticateResult.Fail(ex);
         }
     }
 }

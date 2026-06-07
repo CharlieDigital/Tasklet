@@ -34,6 +34,8 @@ dotnet watch run --project host --non-interactive
 aspire run
 ```
 
+> Quick sanity check: `curl http://api.localhost:8089/health` should return `{"status":"Healthy","checkedAt":"<time>"}`
+
 This will bring up Aspire with the following key components:
 
 |Component|Description|

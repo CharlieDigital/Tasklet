@@ -1,8 +1,12 @@
 using Tasklet.Runtime;
+using Tasklet.Runtime.Config;
 
 Console.WriteLine("Starting Tasklet Runtime...");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Set up logging first; injected Serilog as ILogger so we get OTEL structured logs
+builder.AddTaskletLogging();
 
 // Add Scalar API services for testing
 builder.Services.AddOpenApi(options =>
