@@ -84,23 +84,19 @@
             @positive-click="emit('delete', tasklet)"
           >
             <template #trigger>
-              <NTooltip>
-                <template #trigger>
-                  <NButton
-                    tertiary
-                    circle
-                    type="error"
-                    aria-label="Delete tasklet"
-                  >
-                    <template #icon>
-                      <NIcon>
-                        <Trash />
-                      </NIcon>
-                    </template>
-                  </NButton>
+              <NButton
+                tertiary
+                circle
+                type="error"
+                title="Delete"
+                aria-label="Delete tasklet"
+              >
+                <template #icon>
+                  <NIcon>
+                    <Trash />
+                  </NIcon>
                 </template>
-                Delete
-              </NTooltip>
+              </NButton>
             </template>
             Delete this tasklet?
           </NPopconfirm>

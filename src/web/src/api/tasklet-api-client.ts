@@ -128,6 +128,16 @@ const client = (async <TResponseData, _TError, TRequestData>(
 ) => {
   const mergedConfig = mergeConfig(getConfig(), config);
   const headers = await buildHeaders(mergedConfig.headers);
+  const requestHeaders =
+    mergedConfig.data === undefined || mergedConfig.data instanceof FormData
+      ? headers
+      : {
+          // Minimal API body binding requires JSON requests to declare their
+          // media type; generated Kubb methods provide the body, this runtime
+          // supplies the shared transport header.
+          "Content-Type": "application/json",
+          ...headers,
+        };
   const normalizedParams = new URLSearchParams();
 
   Object.entries(mergedConfig.params || {}).forEach(([key, value]) => {
@@ -156,7 +166,7 @@ const client = (async <TResponseData, _TError, TRequestData>(
           ? undefined
           : JSON.stringify(mergedConfig.data),
     signal: mergedConfig.signal,
-    headers,
+    headers: requestHeaders,
   });
 
   if (!response.ok) {

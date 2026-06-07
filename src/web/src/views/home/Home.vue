@@ -12,6 +12,16 @@
         </div>
       </div>
 
+      <NAlert
+        v-if="taskletError"
+        type="error"
+        closable
+        class="task-home-alert"
+        @close="taskletStore.clearError"
+      >
+        {{ taskletError }}
+      </NAlert>
+
       <NTabs
         v-model:value="activeTab"
         type="line"
@@ -24,7 +34,7 @@
             <span class="task-tab-label">
               Pinned
               <span class="task-tab-count">
-                {{ pinnedTasklets.length }}
+                {{ pinnedCount }}
               </span>
             </span>
           </template>
@@ -35,12 +45,12 @@
           >
             <PinnedTaskletsTab
               :tasklets="pinnedTasklets"
-              :loading="false"
+              :loading="pinnedLoading"
               :error="null"
-              @pin="handleVisualPin"
-              @complete="handleVisualComplete"
+              @pin="handlePin"
+              @complete="handleComplete"
               @edit="openEditTab"
-              @delete="handleVisualDelete"
+              @delete="handleDelete"
             />
           </NScrollbar>
         </NTabPane>
@@ -49,7 +59,7 @@
             <span class="task-tab-label">
               All
               <span class="task-tab-count">
-                {{ visualTasklets.length }}
+                {{ allCount }}
               </span>
             </span>
           </template>
@@ -59,13 +69,13 @@
             content-class="task-pane-scroll-content"
           >
             <AllTaskletsTab
-              :tasklets="visualTasklets"
-              :loading="false"
+              :tasklets="activeTasklets"
+              :loading="allLoading"
               :error="null"
-              @pin="handleVisualPin"
-              @complete="handleVisualComplete"
+              @pin="handlePin"
+              @complete="handleComplete"
               @edit="openEditTab"
-              @delete="handleVisualDelete"
+              @delete="handleDelete"
             />
           </NScrollbar>
         </NTabPane>
@@ -74,7 +84,7 @@
             <span class="task-tab-label">
               Done
               <span class="task-tab-count">
-                {{ doneTasklets.length }}
+                {{ doneCount }}
               </span>
             </span>
           </template>
@@ -85,12 +95,12 @@
           >
             <DoneTaskletsTab
               :tasklets="doneTasklets"
-              :loading="false"
+              :loading="doneLoading"
               :error="null"
-              @pin="handleVisualPin"
-              @complete="handleVisualComplete"
+              @pin="handlePin"
+              @complete="handleComplete"
               @edit="openEditTab"
-              @delete="handleVisualDelete"
+              @delete="handleDelete"
             />
           </NScrollbar>
         </NTabPane>
@@ -102,8 +112,8 @@
           >
             <CreateTaskletTab
               :key="createFormKey"
-              :loading="false"
-              @submit="handleVisualCreate"
+              :loading="saving"
+              @submit="handleCreate"
               @cancel="activeTab = 'pinned'"
             />
           </NScrollbar>
@@ -130,8 +140,8 @@
           >
             <EditTaskletTab
               :tasklet="tasklet"
-              :loading="false"
-              @submit="handleVisualEdit(tasklet.id, $event)"
+              :loading="saving"
+              @submit="handleEdit(tasklet.id, $event)"
               @cancel="closeEditTab(tasklet.id)"
               @dirty-change="setEditDirty(tasklet.id, $event)"
             />
@@ -144,9 +154,6 @@
 
 <script setup lang="ts">
 import type { CreateTaskletRequest } from "@/api/generated/types/CreateTaskletRequest";
-import { colorEnum } from "@/api/generated/types/Color";
-import { priorityEnum } from "@/api/generated/types/Priority";
-import { statusEnum } from "@/api/generated/types/Status";
 import type { TaskletResponse } from "@/api/generated/types/TaskletResponse";
 import type { UpdateTaskletRequest } from "@/api/generated/types/UpdateTaskletRequest";
 import AllTaskletsTab from "@/views/home/components/AllTaskletsTab.vue";
@@ -154,33 +161,54 @@ import CreateTaskletTab from "@/views/home/components/CreateTaskletTab.vue";
 import DoneTaskletsTab from "@/views/home/components/DoneTaskletsTab.vue";
 import EditTaskletTab from "@/views/home/components/EditTaskletTab.vue";
 import PinnedTaskletsTab from "@/views/home/components/PinnedTaskletsTab.vue";
-import { taskletFixtures } from "@/views/home/tasklet-fixtures";
 import { useAppStore } from "@/stores/app-store";
+import { useTaskletStore } from "@/stores/tasklet-store";
 
 const appStore = useAppStore();
 const { displayName } = storeToRefs(appStore);
+const taskletStore = useTaskletStore();
+const {
+  allTasklets,
+  activeTasklets,
+  pinnedTasklets,
+  doneTasklets,
+  allLoading,
+  pinnedLoading,
+  doneLoading,
+  saving,
+  taskletError,
+  allCount,
+  pinnedCount,
+  doneCount,
+} = storeToRefs(taskletStore);
 
 const activeTab = ref("pinned");
-const visualTasklets = ref<TaskletResponse[]>(
-  taskletFixtures.map((tasklet) => ({ ...tasklet })),
-);
 const editingTaskletIds = ref<string[]>([]);
 const editDirtyById = reactive<Record<string, boolean>>({});
 const createFormKey = ref(0);
 
-const pinnedTasklets = computed(() =>
-  visualTasklets.value.filter((tasklet) => tasklet.pinned),
-);
-const doneTasklets = computed(() =>
-  visualTasklets.value.filter(
-    (tasklet) => tasklet.status === statusEnum.Completed,
-  ),
-);
+/**
+ * Edit tabs resolve against every loaded list because a Tasklet may move between
+ * Pinned, All, and Done after a quick card action refreshes API data.
+ */
+const taskletsById = computed(() => {
+  const tasklets = new Map<string, TaskletResponse>();
+
+  allTasklets.value.forEach((tasklet) => tasklets.set(tasklet.id, tasklet));
+  pinnedTasklets.value.forEach((tasklet) => tasklets.set(tasklet.id, tasklet));
+  doneTasklets.value.forEach((tasklet) => tasklets.set(tasklet.id, tasklet));
+
+  return tasklets;
+});
 const editingTasklets = computed(() =>
   editingTaskletIds.value
-    .map((id) => visualTasklets.value.find((tasklet) => tasklet.id === id))
+    .map((id) => taskletsById.value.get(id))
     .filter((tasklet): tasklet is TaskletResponse => tasklet !== undefined),
 );
+
+onMounted(() => {
+  void taskletStore.loadTasklets();
+});
 
 function editTabName(id: string) {
   return `edit:${id}`;
@@ -219,70 +247,42 @@ function setEditDirty(id: string, dirty: boolean) {
   editDirtyById[id] = dirty;
 }
 
-function handleVisualPin(tasklet: TaskletResponse) {
-  replaceVisualTasklet(tasklet.id, { pinned: !tasklet.pinned });
+async function handlePin(tasklet: TaskletResponse) {
+  await runTaskletAction(() => taskletStore.togglePinned(tasklet));
 }
 
-function handleVisualComplete(tasklet: TaskletResponse) {
-  replaceVisualTasklet(tasklet.id, {
-    status: statusEnum.Completed,
-    completedAtUtc: new Date(),
+async function handleComplete(tasklet: TaskletResponse) {
+  await runTaskletAction(() => taskletStore.completeTasklet(tasklet.id));
+}
+
+async function handleDelete(tasklet: TaskletResponse) {
+  await runTaskletAction(async () => {
+    await taskletStore.deleteTasklet(tasklet.id);
+    closeEditTab(tasklet.id);
   });
 }
 
-function handleVisualDelete(tasklet: TaskletResponse) {
-  visualTasklets.value = visualTasklets.value.filter(
-    (current) => current.id !== tasklet.id,
-  );
-  closeEditTab(tasklet.id);
-}
-
-function handleVisualCreate(request: CreateTaskletRequest) {
-  const now = new Date();
-
-  visualTasklets.value = [
-    {
-      id: crypto.randomUUID(),
-      userId: "visual-user",
-      title: request.title,
-      body: request.body ?? "",
-      status: request.status ?? statusEnum.NotStarted,
-      priority: request.priority ?? priorityEnum.Medium,
-      explicitOrder: request.explicitOrder,
-      pinned: request.pinned ?? false,
-      color: request.color ?? colorEnum.Emerald,
-      createdAtUtc: now,
-      completedAtUtc: request.completedAtUtc,
-      dueAtUtc: request.dueAtUtc,
-    },
-    ...visualTasklets.value,
-  ];
-  createFormKey.value += 1;
-  activeTab.value = "all";
-}
-
-function handleVisualEdit(id: string, request: UpdateTaskletRequest) {
-  replaceVisualTasklet(id, {
-    title: request.title,
-    body: request.body ?? "",
-    status: request.status,
-    priority: request.priority,
-    explicitOrder: request.explicitOrder,
-    pinned: request.pinned,
-    color: request.color,
-    completedAtUtc: request.completedAtUtc,
-    dueAtUtc: request.dueAtUtc,
+async function handleCreate(request: CreateTaskletRequest) {
+  await runTaskletAction(async () => {
+    await taskletStore.createTasklet(request);
+    createFormKey.value += 1;
+    activeTab.value = "all";
   });
-  closeEditTab(id);
 }
 
-function replaceVisualTasklet(
-  id: string,
-  patch: Partial<Omit<TaskletResponse, "id" | "userId" | "createdAtUtc">>,
-) {
-  visualTasklets.value = visualTasklets.value.map((tasklet) =>
-    tasklet.id === id ? { ...tasklet, ...patch } : tasklet,
-  );
+async function handleEdit(id: string, request: UpdateTaskletRequest) {
+  await runTaskletAction(async () => {
+    await taskletStore.updateTasklet(id, request);
+    closeEditTab(id);
+  });
+}
+
+async function runTaskletAction(action: () => Promise<void>) {
+  try {
+    await action();
+  } catch {
+    // The Tasklet store owns user-facing error text for failed API actions.
+  }
 }
 </script>
 
@@ -310,6 +310,10 @@ function replaceVisualTasklet(
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+.task-home-alert {
+  margin-top: 16px;
 }
 
 .task-home-eyebrow {

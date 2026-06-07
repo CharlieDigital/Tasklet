@@ -55,6 +55,36 @@
   - `yarn --cwd src/web vite build`
 - `dotnet csharpier format src/backend src/tests` could not run because `dotnet-csharpier` is not installed in the local tool environment.
 
+## Phase 4
+
+- Replaced fake fixture data with `src/web/src/stores/tasklet-store.ts`.
+- The Home root now owns the Tasklet store boundary and passes store state/actions into presentational tab/card/form components.
+- Removed `src/web/src/views/home/tasklet-fixtures.ts` from runtime data flow.
+- Wired generated clients for list, done, create, update, delete, pin, unpin, and complete.
+- Deliberate deviation from the original Phase 4 pinning plan:
+  - The store uses the direct `pinTasklet`, `unpinTasklet`, and `completeTasklet` operations added in the previous slice.
+  - This avoids rebuilding full update payloads for quick card actions and prevents stale card data from overwriting unrelated fields.
+- Added store-side date normalization because generated date fields are typed as `Date`, but JSON responses arrive as strings.
+  - UTC strings without an explicit offset are normalized with `Z` so relative card dates do not render as future local times.
+- Updated the generated client runtime wrapper to send `Content-Type: application/json` for JSON bodies; the backend returned `415 Unsupported Media Type` without it.
+- Changed the All tab view model to exclude completed Tasklets; completed work now belongs to the Done tab.
+- Simplified the delete card action trigger so `NPopconfirm` receives the button directly; the previous tooltip/popconfirm nesting intercepted clicks.
+- Rebuilt only the Aspire `tasklet-api` resource after Playwright found the running backend did not yet expose `/tasklets/done`.
+- Verification passed:
+  - `yarn --cwd src/web format:check`
+  - `yarn --cwd src/web vue-tsc -b`
+  - `yarn --cwd src/web vite build`
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo`
+  - `git diff --check`
+- Playwright confirmed:
+  - Initial all/pinned/done list requests return `200`.
+  - Create posts to `/api/v1/tasklets` and refreshes all lists.
+  - Pin posts to `/api/v1/tasklets/{id}/pin` and updates the Pinned count.
+  - Complete posts to `/api/v1/tasklets/{id}/complete`, updates the Done count, and removes the completed task from All.
+  - Edit posts to `/api/v1/tasklets/{id}` and refreshes the card title.
+  - Delete opens the confirmation popover, posts `DELETE /api/v1/tasklets/{id}`, and refreshes lists back to zero.
+  - Browser console is clean after the final pass.
+
 ## Phase 3
 
 - Added the shared create/edit form composable and Tasklet form component.
