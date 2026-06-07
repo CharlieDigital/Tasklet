@@ -2,6 +2,10 @@ using Aspire.Hosting.Yarp;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+const string FirebaseEmulatorVolumePath = "/srv/firebase/.data-volume";
+const string FirebaseEmulatorDataPath = $"{FirebaseEmulatorVolumePath}/export";
+const string FirebaseEmulatorDataVolumeName = "tasklet-firebase-emulator-data";
+
 // The main backend API runtime.
 var backend = builder
     .AddProject<Projects.Tasklet_API>(name: "tasklet-api")
@@ -41,6 +45,12 @@ var firebase = builder
         contextPath: ".",
         dockerfilePath: "Dockerfile.firebase"
     )
+    // Firebase imports from and exports to a subdirectory because exporting
+    // directly into the mounted volume root fails with a resource-busy error.
+    // A named Docker volume preserves emulator auth state across container rebuilds.
+    .WithEnvironment("FIREBASE_EMULATOR_DATA_DIR", FirebaseEmulatorDataPath)
+    .WithVolume(FirebaseEmulatorDataVolumeName, FirebaseEmulatorVolumePath)
+    .WithLifetime(ContainerLifetime.Persistent)
     .WithHttpEndpoint(9099, 9099, name: "firebase", isProxied: false);
 
 // Vue front-end app.

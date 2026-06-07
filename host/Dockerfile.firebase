@@ -7,5 +7,10 @@ RUN apk --no-cache add openjdk21-jre bash curl && \
   npm i -g firebase-tools@$FIREBASE_VERSION
 WORKDIR /srv/firebase
 RUN printf '{ "emulators": { "auth": { "host": "0.0.0.0", "port": 9099 } } }\n' > firebase.json
+COPY firebase-entrypoint.sh /usr/local/bin/firebase-entrypoint
+RUN chmod +x /usr/local/bin/firebase-entrypoint
 EXPOSE 9099
-ENTRYPOINT ["firebase", "emulators:start", "--only", "auth", "--project", "tasklet-app"]
+# The emulator only exports on a clean shutdown; Docker should ask Firebase to
+# stop the same way a developer does locally.
+STOPSIGNAL SIGINT
+ENTRYPOINT ["firebase-entrypoint"]

@@ -26,6 +26,10 @@
 - Frontend URI: `http://tasklet.localhost:8089`
 - Backend API URI: `http://api.localhost:8089`
 - Use Playwright to test the frontend
+- Run unit tests with `dotnet run` because this is `TUnit`, not `XUnit`
+  - `dotnet run --project src/tests/Tasklet.Tests.csproj --output detailed --disable-logo`
+  - Use targeted runs with tree-node filter syntax, then run the collection, then run all tests; got step by step to verify the tests are running and passing as expected
+- For Firebase, use the "Auto-generate user information" button when creating new accounts to simplify user creation in the emulator.
 
 ### Plans
 
@@ -55,6 +59,9 @@ Plans go into `.agents/plans` with the following rules:
   - Determine how the work will be verified whether with a unit test or Playwright or if manual intervention is required to perform some external action
   - Then break down the work into a checklist of action items to perform, step-by-step to reach te objective
   - Use the checklist to guide the work so that every step is completed and nothing is missed
+- Use logs and OpenTelemetry traces on the backend to trace the flow of work and troubleshoot.  Leave meaningful log messages and created custom spans as needed; use OTEL events as a mechanism to trace work.
+  - You can use `aspire` CLI or the MCP tool to view this as the application is running (use Aspire to rebuild as needed)
+  - Use Aspire skills in `.agents/skills` as needed
 
 ### Code Comments
 
@@ -67,3 +74,9 @@ Leaving code comments is **very important**.  This is your long term memory stor
 - Focus on "why" and the core interaction that the code facilitates; do not dwell on "what" (we can read the code)
 - Use inline comments to call out important details, complexity, tradeoffs and decisions
 - If a comment has a link to an external resource, never remove it; these links are where we can find relevant information about some external system, SDK, third party library, etc.
+
+### Key Rules
+
+- Unless working on the Aspire Host, avoid stopping and starting Aspire.
+  - Stop and start individual resources as needed; do not stop the entire stack during normal dev
+  - Only restart the Aspire stack if we are specifically modifying the `AppHost.cs` (requires a restart)
