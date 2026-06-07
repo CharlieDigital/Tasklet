@@ -5,8 +5,9 @@
   >
     <NInputGroup>
       <NInput
+        ref="quickAddInput"
         v-model:value="title"
-        :placeholder="placeholder"
+        :placeholder="shortcutPlaceholder"
         :disabled="loading"
         clearable
       />
@@ -24,7 +25,9 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+import type { InputInst } from "naive-ui";
+
+const props = withDefaults(
   defineProps<{
     loading: boolean;
     placeholder?: string;
@@ -43,6 +46,54 @@ const emit = defineEmits<{
 }>();
 
 const title = ref("");
+const quickAddInput = ref<InputInst | null>(null);
+const shortcutLabel = computed(() => (isApplePlatform() ? "CMD+A" : "CTRL+A"));
+const shortcutPlaceholder = computed(
+  () => `${props.placeholder} (${shortcutLabel.value})`,
+);
+
+useEventListener(window, "keydown", handleQuickAddShortcut);
+
+/**
+ * Cmd+A and Ctrl+A normally mean "select all", so only claim the shortcut when
+ * focus is outside text-editing surfaces and quick-add can actually receive it.
+ */
+function handleQuickAddShortcut(event: KeyboardEvent) {
+  if (
+    props.loading ||
+    isEditableTarget(event.target) ||
+    event.key.toLowerCase() !== "a" ||
+    event.altKey ||
+    event.shiftKey ||
+    shortcutModifierPressed(event) === false
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  quickAddInput.value?.focus();
+}
+
+function shortcutModifierPressed(event: KeyboardEvent) {
+  return isApplePlatform()
+    ? event.metaKey && !event.ctrlKey
+    : event.ctrlKey && !event.metaKey;
+}
+
+function isApplePlatform() {
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
+    return true;
+  }
+
+  return target instanceof HTMLElement && target.isContentEditable;
+}
 
 /**
  * Quick-add only captures the task title. The Home store boundary fills in API
