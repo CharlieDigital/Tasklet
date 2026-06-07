@@ -1,51 +1,37 @@
+using Tasklet.Runtime;
+
+Console.WriteLine("Starting Tasklet Runtime...");
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Add Scalar API services for testing
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer(
+        (document, context, cancellationToken) =>
+        {
+            document.Servers = [new() { Url = "http://api.localhost:8089/api" }];
+            return Task.CompletedTask;
+        }
+    );
+});
+
+// Load the configuration.
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection(nameof(AppSettings)));
+
+var settings = builder.Configuration.GetSection(nameof(AppSettings)).Get<AppSettings>();
+
+if (settings == null)
+{
+    Environment.Exit(1); // ! EXIT: Couldn't load the config.
+}
+
+// ⭐️ Add core services for Tasklet.
+builder.Services.AddFirebaseAuthentication(settings).AddTaskletHttp(settings);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseTaskletHttp(settings, builder.Environment);
 
-var summaries = new[]
-{
-    "Freezing",
-    "Bracing",
-    "Chilly",
-    "Cool",
-    "Mild",
-    "Warm",
-    "Balmy",
-    "Hot",
-    "Sweltering",
-    "Scorching",
-};
-
-app.MapGet(
-        "/weatherforecast",
-        () =>
-        {
-            var forecast = Enumerable
-                .Range(1, 5)
-                .Select(index => new WeatherForecast(
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-                .ToArray();
-            return forecast;
-        }
-    )
-    .WithName("GetWeatherForecast");
-
+// ⭐️ Application starts here.
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
