@@ -180,6 +180,25 @@ public class TaskletEndpointTests
     }
 
     [Test]
+    public async Task Done_UsesExplicitDoneStorageEntryPoint()
+    {
+        // Guards that the Done API calls the dedicated completed-task query the
+        // frontend Done tab will consume.
+        var tasklet = NewTasklet(userId: "user-1", title: "Done", status: Status.Completed);
+        var storage = new FakeTaskletStorage { DoneListResult = [tasklet] };
+        var handler = new DoneTaskletsHandler(storage);
+
+        var result = await handler.Handle(User("user-1"));
+        var ok = result.Result as Ok<TaskletListResponse>;
+
+        await Assert.That(ok).IsNotNull();
+        await Assert.That(storage.DoneListCalled).IsTrue();
+        await Assert.That(storage.LastUserId).IsEqualTo("user-1");
+        await Assert.That(ok!.Value).IsNotNull();
+        await Assert.That(ok.Value!.Items[0].Status).IsEqualTo(Status.Completed);
+    }
+
+    [Test]
     public async Task Get_ReturnsUnauthorized_WhenUserIdClaimIsMissing()
     {
         // Guards that single Tasklet reads require authentication before
@@ -391,6 +410,87 @@ public class TaskletEndpointTests
     }
 
     [Test]
+    public async Task Pin_CallsScopedStorageAndReturnsUpdatedTasklet()
+    {
+        // Guards that pinning uses the direct storage entry point rather than
+        // requiring clients to send a full update payload.
+        var tasklet = NewTasklet(userId: "user-1", title: "Pin me");
+        var storage = new FakeTaskletStorage { SetPinnedResult = tasklet };
+        var handler = new PinTaskletHandler(storage);
+
+        var result = await handler.Pin(User("user-1"), tasklet.Id);
+        var ok = result.Result as Ok<TaskletResponse>;
+
+        await Assert.That(ok).IsNotNull();
+        await Assert.That(storage.LastPinnedId).IsEqualTo(tasklet.Id);
+        await Assert.That(storage.LastPinnedUserId).IsEqualTo("user-1");
+        await Assert.That(storage.LastPinnedValue).IsTrue();
+    }
+
+    [Test]
+    public async Task Unpin_CallsScopedStorageAndReturnsUpdatedTasklet()
+    {
+        // Guards that unpinning uses the same direct storage entry point with
+        // an explicit false value.
+        var tasklet = NewTasklet(userId: "user-1", title: "Unpin me", pinned: true);
+        var storage = new FakeTaskletStorage { SetPinnedResult = tasklet };
+        var handler = new PinTaskletHandler(storage);
+
+        var result = await handler.Unpin(User("user-1"), tasklet.Id);
+        var ok = result.Result as Ok<TaskletResponse>;
+
+        await Assert.That(ok).IsNotNull();
+        await Assert.That(storage.LastPinnedId).IsEqualTo(tasklet.Id);
+        await Assert.That(storage.LastPinnedUserId).IsEqualTo("user-1");
+        await Assert.That(storage.LastPinnedValue).IsFalse();
+    }
+
+    [Test]
+    public async Task Pin_ReturnsNotFound_WhenStorageFindsNoOwnedTasklet()
+    {
+        var storage = new FakeTaskletStorage();
+        var handler = new PinTaskletHandler(storage);
+
+        var result = await handler.Pin(User("user-1"), Guid.NewGuid());
+
+        await Assert.That(result.Result).IsOfType(typeof(NotFound));
+    }
+
+    [Test]
+    public async Task Complete_CallsScopedStorageAndReturnsUpdatedTasklet()
+    {
+        // Guards that completion has a direct endpoint which sets completion
+        // server-side without clients posting every mutable Tasklet field.
+        var tasklet = NewTasklet(
+            userId: "user-1",
+            title: "Complete me",
+            status: Status.Completed,
+            completedAtUtc: DateTime.UtcNow
+        );
+        var storage = new FakeTaskletStorage { CompleteResult = tasklet };
+        var handler = new CompleteTaskletHandler(storage);
+
+        var result = await handler.Handle(User("user-1"), tasklet.Id);
+        var ok = result.Result as Ok<TaskletResponse>;
+
+        await Assert.That(ok).IsNotNull();
+        await Assert.That(storage.LastCompleteId).IsEqualTo(tasklet.Id);
+        await Assert.That(storage.LastCompleteUserId).IsEqualTo("user-1");
+        await Assert.That(storage.LastCompleteAtUtc).IsNotNull();
+    }
+
+    [Test]
+    public async Task Complete_ReturnsNotFound_WhenStorageFindsNoOwnedTasklet()
+    {
+        var storage = new FakeTaskletStorage();
+        var handler = new CompleteTaskletHandler(storage);
+
+        var result = await handler.Handle(User("user-1"), Guid.NewGuid());
+
+        await Assert.That(result.Result).IsOfType(typeof(NotFound));
+    }
+
+    [Test]
     public async Task Delete_ReturnsNotFound_WhenTaskletIsMissing()
     {
         // Guards that deleting a missing Tasklet returns 404 instead of
@@ -516,6 +616,7 @@ public class TaskletEndpointTests
     {
         public bool ListCalled { get; private set; }
         public bool PinnedListCalled { get; private set; }
+        public bool DoneListCalled { get; private set; }
         public bool GetByIdCalled { get; private set; }
         public string? LastUserId { get; private set; }
         public int? LastSkip { get; private set; }
@@ -525,10 +626,19 @@ public class TaskletEndpointTests
         public Expression<Func<ISortableTasklet, object?>>? LastOrderBy { get; private set; }
         public List<CoreTasklet> ListResult { get; init; } = [];
         public List<CoreTasklet> PinnedListResult { get; init; } = [];
+        public List<CoreTasklet> DoneListResult { get; init; } = [];
         public CoreTasklet? TaskletByIdResult { get; init; }
         public CoreTasklet? CreatedTasklet { get; private set; }
         public CoreTasklet? UpdatedTasklet { get; private set; }
         public Guid? DeletedId { get; private set; }
+        public Guid? LastPinnedId { get; private set; }
+        public string? LastPinnedUserId { get; private set; }
+        public bool? LastPinnedValue { get; private set; }
+        public CoreTasklet? SetPinnedResult { get; init; }
+        public Guid? LastCompleteId { get; private set; }
+        public string? LastCompleteUserId { get; private set; }
+        public DateTime? LastCompleteAtUtc { get; private set; }
+        public CoreTasklet? CompleteResult { get; init; }
 
         public Task<List<CoreTasklet>> GetTaskletsForUserAsync(
             string userId,
@@ -557,6 +667,19 @@ public class TaskletEndpointTests
             return Task.FromResult(PinnedListResult);
         }
 
+        public Task<List<CoreTasklet>> GetDoneTaskletsForUserAsync(
+            string userId,
+            int skip = 0,
+            int take = 25,
+            Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+            SortDirection sortDirection = SortDirection.Descending
+        )
+        {
+            DoneListCalled = true;
+            RecordQuery(userId, skip, take, orderBy, sortDirection, filter: null);
+            return Task.FromResult(DoneListResult);
+        }
+
         public Task<CoreTasklet?> GetTaskletByIdAsync(Guid id)
         {
             GetByIdCalled = true;
@@ -579,6 +702,26 @@ public class TaskletEndpointTests
         {
             UpdatedTasklet = tasklet;
             return Task.CompletedTask;
+        }
+
+        public Task<CoreTasklet?> SetTaskletPinnedAsync(Guid id, string userId, bool pinned)
+        {
+            LastPinnedId = id;
+            LastPinnedUserId = userId;
+            LastPinnedValue = pinned;
+            return Task.FromResult(SetPinnedResult);
+        }
+
+        public Task<CoreTasklet?> CompleteTaskletAsync(
+            Guid id,
+            string userId,
+            DateTime completedAtUtc
+        )
+        {
+            LastCompleteId = id;
+            LastCompleteUserId = userId;
+            LastCompleteAtUtc = completedAtUtc;
+            return Task.FromResult(CompleteResult);
         }
 
         public Task<int> DeleteTaskletAsync(Guid id)

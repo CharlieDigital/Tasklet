@@ -5,11 +5,15 @@
 
 import fetch from "../../tasklet-api-client";
 import type { Client, RequestConfig, ResponseErrorConfig } from "../../tasklet-api-client";
+import type { CompleteTaskletMutationResponse, CompleteTaskletPathParams, CompleteTasklet404 } from "../types/CompleteTasklet.ts";
 import type { CreateTaskletMutationRequest, CreateTaskletMutationResponse, CreateTasklet400 } from "../types/CreateTasklet.ts";
 import type { DeleteTaskletMutationResponse, DeleteTaskletPathParams, DeleteTasklet404 } from "../types/DeleteTasklet.ts";
 import type { GetTaskletQueryResponse, GetTaskletPathParams, GetTasklet404 } from "../types/GetTasklet.ts";
+import type { ListDoneTaskletsQueryResponse, ListDoneTaskletsQueryParams } from "../types/ListDoneTasklets.ts";
 import type { ListPinnedTaskletsQueryResponse, ListPinnedTaskletsQueryParams } from "../types/ListPinnedTasklets.ts";
 import type { ListTaskletsQueryResponse, ListTaskletsQueryParams } from "../types/ListTasklets.ts";
+import type { PinTaskletMutationResponse, PinTaskletPathParams, PinTasklet404 } from "../types/PinTasklet.ts";
+import type { UnpinTaskletMutationResponse, UnpinTaskletPathParams, UnpinTasklet404 } from "../types/UnpinTasklet.ts";
 import type { UpdateTaskletMutationRequest, UpdateTaskletMutationResponse, UpdateTaskletPathParams, UpdateTasklet400, UpdateTasklet404 } from "../types/UpdateTasklet.ts";
 import { mergeConfig } from "../../tasklet-api-client";
 
@@ -48,6 +52,16 @@ export class Tasklet {
   }
 
 /**
+   * @description Gets the current user's completed Tasklets.
+   * {@link /v1/tasklets/done}
+   */
+    static async listDoneTasklets(params?: ListDoneTaskletsQueryParams, config: Partial<RequestConfig> & { client?: Client } = {}) {
+    const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
+    const res = await request<ListDoneTaskletsQueryResponse, ResponseErrorConfig<Error>, unknown>({ ... requestConfig, method : "GET", url : `/v1/tasklets/done`, params })
+    return res.data
+  }
+
+/**
    * @description Gets one Tasklet owned by the current user.
    * {@link /v1/tasklets/:id}
    */
@@ -75,6 +89,36 @@ export class Tasklet {
     static async deleteTasklet(id: DeleteTaskletPathParams["id"], config: Partial<RequestConfig> & { client?: Client } = {}) {
     const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
     const res = await request<DeleteTaskletMutationResponse, ResponseErrorConfig<DeleteTasklet404>, unknown>({ ... requestConfig, method : "DELETE", url : `/v1/tasklets/${id}` })
+    return res.data
+  }
+
+/**
+   * @description Pins a Tasklet owned by the current user.
+   * {@link /v1/tasklets/:id/pin}
+   */
+    static async pinTasklet(id: PinTaskletPathParams["id"], config: Partial<RequestConfig> & { client?: Client } = {}) {
+    const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
+    const res = await request<PinTaskletMutationResponse, ResponseErrorConfig<PinTasklet404>, unknown>({ ... requestConfig, method : "PUT", url : `/v1/tasklets/${id}/pin` })
+    return res.data
+  }
+
+/**
+   * @description Unpins a Tasklet owned by the current user.
+   * {@link /v1/tasklets/:id/unpin}
+   */
+    static async unpinTasklet(id: UnpinTaskletPathParams["id"], config: Partial<RequestConfig> & { client?: Client } = {}) {
+    const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
+    const res = await request<UnpinTaskletMutationResponse, ResponseErrorConfig<UnpinTasklet404>, unknown>({ ... requestConfig, method : "PUT", url : `/v1/tasklets/${id}/unpin` })
+    return res.data
+  }
+
+/**
+   * @description Marks a Tasklet owned by the current user as completed.
+   * {@link /v1/tasklets/:id/complete}
+   */
+    static async completeTasklet(id: CompleteTaskletPathParams["id"], config: Partial<RequestConfig> & { client?: Client } = {}) {
+    const { client: request = fetch, ...requestConfig } = mergeConfig(this.#config, config)
+    const res = await request<CompleteTaskletMutationResponse, ResponseErrorConfig<CompleteTasklet404>, unknown>({ ... requestConfig, method : "PUT", url : `/v1/tasklets/${id}/complete` })
     return res.data
   }
 }

@@ -50,6 +50,21 @@ public class TaskletCoreEndpoints : IEndpoint
 
         group
             .MapGet(
+                "/done",
+                (
+                    ClaimsPrincipal user,
+                    [FromServices] DoneTaskletsHandler handler,
+                    int skip = 0,
+                    int take = 25,
+                    TaskletSortField? sort = null,
+                    SortDirection direction = SortDirection.Descending
+                ) => handler.Handle(user, skip, take, sort, direction)
+            )
+            .WithName("ListDoneTasklets")
+            .WithDescription("Gets the current user's completed Tasklets.");
+
+        group
+            .MapGet(
                 "/{id:guid}",
                 (ClaimsPrincipal user, Guid id, [FromServices] GetTaskletHandler handler) =>
                     handler.Handle(user, id)
@@ -81,6 +96,33 @@ public class TaskletCoreEndpoints : IEndpoint
             )
             .WithName("UpdateTasklet")
             .WithDescription("Updates a Tasklet owned by the current user.");
+
+        group
+            .MapPut(
+                "/{id:guid}/pin",
+                (ClaimsPrincipal user, Guid id, [FromServices] PinTaskletHandler handler) =>
+                    handler.Pin(user, id)
+            )
+            .WithName("PinTasklet")
+            .WithDescription("Pins a Tasklet owned by the current user.");
+
+        group
+            .MapPut(
+                "/{id:guid}/unpin",
+                (ClaimsPrincipal user, Guid id, [FromServices] PinTaskletHandler handler) =>
+                    handler.Unpin(user, id)
+            )
+            .WithName("UnpinTasklet")
+            .WithDescription("Unpins a Tasklet owned by the current user.");
+
+        group
+            .MapPut(
+                "/{id:guid}/complete",
+                (ClaimsPrincipal user, Guid id, [FromServices] CompleteTaskletHandler handler) =>
+                    handler.Handle(user, id)
+            )
+            .WithName("CompleteTasklet")
+            .WithDescription("Marks a Tasklet owned by the current user as completed.");
 
         group
             .MapDelete(

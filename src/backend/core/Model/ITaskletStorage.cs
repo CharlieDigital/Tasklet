@@ -56,6 +56,26 @@ public interface ITaskletStorage
     );
 
     /// <summary>
+    /// Gets a user's completed Tasklets with optional paging and sort selection.
+    /// </summary>
+    /// <param name="userId">Owner identifier used to scope the query.</param>
+    /// <param name="skip">Number of matching completed Tasklets to skip for paging.</param>
+    /// <param name="take">Maximum number of matching completed Tasklets to return.</param>
+    /// <param name="orderBy">
+    /// Expression over <see cref="ISortableTasklet"/>; use direct property
+    /// access only so storage providers can translate it.
+    /// </param>
+    /// <param name="sortDirection">Direction used for the requested sort member.</param>
+    /// <returns>The requested page of completed Tasklets owned by the user.</returns>
+    Task<List<Tasklet>> GetDoneTaskletsForUserAsync(
+        string userId,
+        int skip = 0,
+        int take = 25,
+        Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+        SortDirection sortDirection = SortDirection.Descending
+    );
+
+    /// <summary>
     /// Gets a Tasklet by its unique identifier.
     /// </summary>
     /// <param name="id">Tasklet identifier.</param>
@@ -78,6 +98,24 @@ public interface ITaskletStorage
     /// </summary>
     /// <param name="tasklet">Tasklet containing the updated values.</param>
     Task UpdateTaskletAsync(Tasklet tasklet);
+
+    /// <summary>
+    /// Sets the pinned state of a Tasklet owned by a user.
+    /// </summary>
+    /// <param name="id">Tasklet identifier.</param>
+    /// <param name="userId">Owner identifier used to scope the update.</param>
+    /// <param name="pinned">Pinned value to persist.</param>
+    /// <returns>The updated Tasklet, or `null` when no owned Tasklet matches.</returns>
+    Task<Tasklet?> SetTaskletPinnedAsync(Guid id, string userId, bool pinned);
+
+    /// <summary>
+    /// Marks a Tasklet owned by a user as completed.
+    /// </summary>
+    /// <param name="id">Tasklet identifier.</param>
+    /// <param name="userId">Owner identifier used to scope the update.</param>
+    /// <param name="completedAtUtc">Completion timestamp to persist.</param>
+    /// <returns>The updated Tasklet, or `null` when no owned Tasklet matches.</returns>
+    Task<Tasklet?> CompleteTaskletAsync(Guid id, string userId, DateTime completedAtUtc);
 
     /// <summary>
     /// Deletes a Tasklet by its unique identifier.

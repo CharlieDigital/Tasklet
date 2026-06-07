@@ -189,6 +189,62 @@
         }
       }
     },
+    "/v1/tasklets/done": {
+      "get": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Gets the current user's completed Tasklets.",
+        "operationId": "ListDoneTasklets",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TaskletSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "default": "Descending",
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tasklets/{id}": {
       "get": {
         "tags": [
@@ -296,6 +352,111 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/v1/tasklets/{id}/pin": {
+      "put": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Pins a Tasklet owned by the current user.",
+        "operationId": "PinTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/v1/tasklets/{id}/unpin": {
+      "put": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Unpins a Tasklet owned by the current user.",
+        "operationId": "UnpinTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/v1/tasklets/{id}/complete": {
+      "put": {
+        "tags": [
+          "Tasklet"
+        ],
+        "description": "Marks a Tasklet owned by the current user as completed.",
+        "operationId": "CompleteTasklet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskletResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found"

@@ -320,6 +320,84 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
+    public async Task GetDoneTaskletsForUserAsync_ReturnsOnlyCompletedForRequestedUser()
+    {
+        // Guards that the Done tab's storage query is a first-class completed
+        // task query rather than a client-side filter over all Tasklets.
+        var completed = await Provider.CreateTaskletAsync(
+            NewTasklet(userId: "user-1", title: "Done", status: Status.Completed)
+        );
+
+        await Provider.CreateTaskletAsync(
+            NewTasklet(userId: "user-1", title: "In progress", status: Status.InProgress)
+        );
+        await Provider.CreateTaskletAsync(
+            NewTasklet(userId: "user-2", title: "Other done", status: Status.Completed)
+        );
+
+        var results = await Provider.GetDoneTaskletsForUserAsync("user-1");
+
+        await AssertIdsInOrder(results, completed.Id);
+    }
+
+    [Test]
+    public async Task SetTaskletPinnedAsync_UpdatesOnlyOwnedTasklet()
+    {
+        // Guards that common pin actions are scoped in storage, so API handlers
+        // do not need to load and rewrite the whole Tasklet to flip one flag.
+        var created = await Provider.CreateTaskletAsync(
+            NewTasklet(userId: "user-1", title: "Pin me")
+        );
+
+        var mismatch = await Provider.SetTaskletPinnedAsync(created.Id, "user-2", pinned: true);
+        var updated = await Provider.SetTaskletPinnedAsync(created.Id, "user-1", pinned: true);
+        var persisted = await Provider.GetTaskletByIdAsync(created.Id);
+
+        await Assert.That(mismatch).IsNull();
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.Pinned).IsTrue();
+        await Assert.That(persisted).IsNotNull();
+        await Assert.That(persisted!.Pinned).IsTrue();
+    }
+
+    [Test]
+    public async Task CompleteTaskletAsync_MarksOwnedTaskletCompleted()
+    {
+        // Guards that completing a Tasklet updates only completion fields and
+        // leaves other mutable fields intact.
+        var completedAtUtc = new DateTime(2026, 6, 7, 16, 0, 0, DateTimeKind.Utc);
+        var created = await Provider.CreateTaskletAsync(
+            NewTasklet(
+                userId: "user-1",
+                title: "Complete me",
+                status: Status.InProgress,
+                pinned: true
+            )
+        );
+
+        var mismatch = await Provider.CompleteTaskletAsync(
+            created.Id,
+            "user-2",
+            completedAtUtc
+        );
+        var updated = await Provider.CompleteTaskletAsync(
+            created.Id,
+            "user-1",
+            completedAtUtc
+        );
+        var persisted = await Provider.GetTaskletByIdAsync(created.Id);
+
+        await Assert.That(mismatch).IsNull();
+        await Assert.That(updated).IsNotNull();
+        await Assert.That(updated!.Status).IsEqualTo(Status.Completed);
+        await Assert.That(updated.CompletedAtUtc).IsEqualTo(completedAtUtc);
+        await Assert.That(updated.Pinned).IsTrue();
+        await Assert.That(persisted).IsNotNull();
+        await Assert.That(persisted!.Status).IsEqualTo(Status.Completed);
+        await Assert.That(persisted.CompletedAtUtc).IsEqualTo(completedAtUtc);
+    }
+
+    [Test]
     public async Task UpdateTaskletAsync_PersistsMutableFields()
     {
         // Guards that updates persist every mutable Tasklet field.

@@ -82,6 +82,27 @@ public partial class SqliteStorageProvider(
     }
 
     /// <inheritdoc/>
+    public async Task<List<Core.Model.Tasklet>> GetDoneTaskletsForUserAsync(
+        string userId,
+        int skip = 0,
+        int take = DefaultTake,
+        Expression<Func<ISortableTasklet, object?>>? orderBy = null,
+        SortDirection sortDirection = SortDirection.Descending
+    )
+    {
+        var (normalizedSkip, normalizedTake) = NormalizePaging(skip, take);
+
+        var query = context
+            .Tasklets.AsNoTracking()
+            .Where(tasklet => tasklet.UserId == userId && tasklet.Status == Status.Completed);
+
+        return await ApplyTaskletOrdering(query, orderBy, sortDirection)
+            .Skip(normalizedSkip)
+            .Take(normalizedTake)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc/>
     public async Task<List<Core.Model.Tasklet>> GetTaskletsForUserAsync(
         string userId,
         int skip = 0,
@@ -121,6 +142,49 @@ public partial class SqliteStorageProvider(
         LogMigratingDatabase(connectionString ?? "<unknown>");
         await context.Database.MigrateAsync();
         LogDatabaseReady(connectionString ?? "<unknown>");
+    }
+
+    /// <inheritdoc/>
+    public async Task<Core.Model.Tasklet?> SetTaskletPinnedAsync(Guid id, string userId, bool pinned)
+    {
+        var existing = await context.Tasklets.SingleOrDefaultAsync(row =>
+            row.Id == id && row.UserId == userId
+        );
+
+        if (existing is null)
+        {
+            return null;
+        }
+
+        existing.Pinned = pinned;
+        await context.SaveChangesAsync();
+        context.Entry(existing).State = EntityState.Detached;
+
+        return existing;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Core.Model.Tasklet?> CompleteTaskletAsync(
+        Guid id,
+        string userId,
+        DateTime completedAtUtc
+    )
+    {
+        var existing = await context.Tasklets.SingleOrDefaultAsync(row =>
+            row.Id == id && row.UserId == userId
+        );
+
+        if (existing is null)
+        {
+            return null;
+        }
+
+        existing.Status = Status.Completed;
+        existing.CompletedAtUtc = NormalizeUtc(completedAtUtc);
+        await context.SaveChangesAsync();
+        context.Entry(existing).State = EntityState.Detached;
+
+        return existing;
     }
 
     /// <inheritdoc/>
