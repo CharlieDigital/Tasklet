@@ -1,9 +1,14 @@
 <template>
-  <!-- Authenticated landing surface used to verify Firebase and backend profile state. -->
-  <section class="home-view">
-    <h1>Home</h1>
-    <p v-if="displayName">Signed in as {{ displayName }}</p>
-  </section>
+  <!--
+    Home dashboard for authenticated users. The Code Reviews entry routes to the
+    same surface that GitHub request links use after the auth guard completes.
+  -->
+  <NFlex vertical align="center">
+    <NCard max-w-4xl>
+      <NH3>Home</NH3>
+      <p v-if="displayName">Signed in as {{ displayName }}</p>
+    </NCard>
+  </NFlex>
 </template>
 
 <script setup lang="ts">
@@ -14,20 +19,4 @@ const appStore = useAppStore();
 const { displayName } = storeToRefs(appStore);
 </script>
 
-<style scoped>
-.home-view {
-  display: grid;
-  gap: 8px;
-}
-
-.home-view h1 {
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.4;
-  margin: 0;
-}
-
-.home-view p {
-  margin: 0;
-}
-</style>
+<style scoped></style>
