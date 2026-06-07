@@ -74,6 +74,7 @@ This will bring up Aspire with the following key components:
 - No SignalR for this app as it would require backplane in multi-instance scenarios or use of Azure SignalR which adds runtime cost
   - OpenAPI spec to keep it simple and allow for ease of local testing via Scalar UI
   - No multi-player support!
+- Use standard `ILogger` for this instead of `Serilog`; can add later if needed.
 - No Redis or caching for the v0, but possible to add to scale app
 
 ### Frontend
@@ -95,3 +96,5 @@ This project includes a `Dockerfile` which packages the application for deployme
 A good target for this is Google Cloud Run as this is capable of scaling to 0 which is a great way to run this economically.
 
 The container will package the Vue app into the .NET app's `wwwroot` and serve it with cache headers through Google's CDNs, allowing it to scale well.
+
+If I have time, I will deploy this to Cloud Run!

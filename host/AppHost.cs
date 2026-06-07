@@ -5,6 +5,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 // The main backend API runtime.
 var backend = builder
     .AddProject<Projects.Tasklet_API>(name: "tasklet-api")
+    // .NET Firebase Admin SDK requires environment variable for emulator
+    // See: https://firebase.google.com/docs/emulator-suite/connect_auth#admin_sdks
+    .WithEnvironment("FIREBASE_AUTH_EMULATOR_HOST", "localhost:9099")
     .WithUrlForEndpoint(
         "http",
         url =>
@@ -38,7 +41,7 @@ var firebase = builder
         contextPath: ".",
         dockerfilePath: "Dockerfile.firebase"
     )
-    .WithHttpEndpoint(9099, 9099, name: "firebase", isProxied: true);
+    .WithHttpEndpoint(9099, 9099, name: "firebase", isProxied: false);
 
 // Vue front-end app.
 var frontend = builder
