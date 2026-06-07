@@ -1,3 +1,4 @@
+import type { UserInfoResponse } from "@/api/generated/types/UserInfoResponse";
 import { renderIcon } from "@/utils/render-utils";
 import { Home, Logout } from "@vicons/tabler";
 import type { MenuOption } from "naive-ui";
@@ -8,6 +9,24 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface";
  */
 export const useAppStore = defineStore("app", () => {
   const isDarkMode = useStorage("isDarkMode", false);
+
+  const loginLoading = ref(false);
+  const loginError = ref<string | null>(null);
+
+  /**
+   * Current user profile info populated from the backend after front-end login.
+   * Make the API call to the .NET backend /me route to get the user profile.  For
+   * now, this largely mirrors the front-end claims, but we would move settings here
+   * and retrieve after login on the FE.
+   */
+  const currentUser = ref<UserInfoResponse | null>(null);
+
+  /**
+   * Performs login flow via Firebase using the emulator.
+   */
+  function login() {
+    // TODO: Start Firebase auth
+  }
 
   /**
    * Performs logout by clearing any relevant state and redirecting to the login page.
@@ -48,6 +67,10 @@ export const useAppStore = defineStore("app", () => {
     leftMenuOptions,
     bottomMenuOptions,
     isDarkMode,
+    currentUser,
+    loginLoading,
+    loginError,
+    login,
     logout,
   };
 });
