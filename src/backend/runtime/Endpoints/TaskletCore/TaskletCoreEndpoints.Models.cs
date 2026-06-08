@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using Tasklet.Core.Model;
 
@@ -30,8 +31,8 @@ public record TaskletListResponse(IReadOnlyList<TaskletResponse> Items, int Skip
 /// Request model for creating a Tasklet.
 /// </summary>
 public record CreateTaskletRequest(
-    string Title,
-    string? Body,
+    [MaxLength(100)] string Title,
+    [MaxLength(4000)] string? Body,
     Status? Status,
     Priority? Priority,
     string? ExplicitOrder,
@@ -45,8 +46,8 @@ public record CreateTaskletRequest(
 /// Request model for updating a Tasklet.
 /// </summary>
 public record UpdateTaskletRequest(
-    string Title,
-    string? Body,
+    [MaxLength(100)] string Title,
+    [MaxLength(4000)] string? Body,
     Status Status,
     Priority Priority,
     string? ExplicitOrder,
@@ -92,7 +93,7 @@ public enum TaskletSortField
     CompletedAtUtc,
 
     /// <summary>
-    /// /// The date and time the Tasklet is due, in UTC.
+    /// The date and time the Tasklet is due, in UTC.
     /// </summary>
     DueAtUtc,
 }

@@ -116,47 +116,46 @@ public static class SetupServicesExtensions
             var allowedCorsOrigins = settings.Auth?.AllowedCorsOrigins ?? [];
 
             // CORS config consumed later...
-            services.AddCors(options =>
-                options.AddPolicy(
-                    "api-cors-policy",
-                    policy =>
-                        policy
-                            .WithOrigins([.. allowedCorsOrigins])
-                            .AllowAnyHeader()
-                            .AllowAnyMethod()
-                            .AllowCredentials()
+            services
+                .AddCors(options =>
+                    options.AddPolicy(
+                        "api-cors-policy",
+                        policy =>
+                            policy
+                                .WithOrigins([.. allowedCorsOrigins])
+                                .AllowAnyHeader()
+                                .AllowAnyMethod()
+                                .AllowCredentials()
+                    )
                 )
-            );
-
-            services.AddAuthorization();
-            services.AddExceptionHandler<TaskletExceptionHandler>();
-            services.AddProblemDetails();
-
-            // Configure JSON options for consistent serialization across the app.
-            services.ConfigureHttpJsonOptions(json =>
-            {
-                json.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                json.SerializerOptions.PropertyNameCaseInsensitive = true;
-                json.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
-            });
-
-            // Just in case we need it.
-            services.AddHttpContextAccessor();
-
-            // Register all IEndpoint implementations for automatic endpoint mapping.
-            services.Scan(scan =>
-                scan.FromAssemblyOf<Program>()
-                    // Register all IEndpoint instances
-                    .AddClasses(classes => classes.AssignableTo<IEndpoint>())
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime()
-                    // Now register all of the handlers
-                    // Handlers are injected by concrete type via [FromServices], so
-                    // they must be registered as self rather than by interface.
-                    .AddClasses(classes => classes.AssignableTo<IEndpointHandler>())
-                    .AsSelf()
-                    .WithTransientLifetime()
-            );
+                .AddAuthorization()
+                // Model validation for .NET 10 minimal web APIs
+                .AddValidation()
+                .AddExceptionHandler<TaskletExceptionHandler>()
+                .AddProblemDetails()
+                // Configure JSON options for consistent serialization across the app.
+                .ConfigureHttpJsonOptions(json =>
+                {
+                    json.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    json.SerializerOptions.PropertyNameCaseInsensitive = true;
+                    json.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+                })
+                // Just in case we need it.
+                .AddHttpContextAccessor()
+                // Register all IEndpoint implementations for automatic endpoint mapping.
+                .Scan(scan =>
+                    scan.FromAssemblyOf<Program>()
+                        // Register all IEndpoint instances
+                        .AddClasses(classes => classes.AssignableTo<IEndpoint>())
+                        .AsImplementedInterfaces()
+                        .WithTransientLifetime()
+                        // Now register all of the handlers
+                        // Handlers are injected by concrete type via [FromServices], so
+                        // they must be registered as self rather than by interface.
+                        .AddClasses(classes => classes.AssignableTo<IEndpointHandler>())
+                        .AsSelf()
+                        .WithTransientLifetime()
+                );
 
             return services;
         }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Tasklet.Core.Endpoints;
@@ -23,11 +24,11 @@ public class TaskletCoreEndpoints : IEndpoint
                 (
                     ClaimsPrincipal user,
                     [FromServices] ListTaskletsHandler handler,
-                    int skip = 0,
-                    int take = 25,
+                    [Range(0, 1000)] int skip = 0,
+                    [Range(10, 100)] int take = 25,
                     TaskletSortField? sort = null,
                     SortDirection direction = SortDirection.Descending,
-                    string? filter = null
+                    [MaxLength(100)] string? filter = null
                 ) => handler.Handle(user, skip, take, sort, direction, filter)
             )
             .WithName("ListTasklets")
@@ -39,8 +40,8 @@ public class TaskletCoreEndpoints : IEndpoint
                 (
                     ClaimsPrincipal user,
                     [FromServices] PinnedTaskletsHandler handler,
-                    int skip = 0,
-                    int take = 25,
+                    [Range(0, 1000)] int skip = 0,
+                    [Range(10, 100)] int take = 25,
                     TaskletSortField? sort = null,
                     SortDirection direction = SortDirection.Descending
                 ) => handler.Handle(user, skip, take, sort, direction)
@@ -54,8 +55,8 @@ public class TaskletCoreEndpoints : IEndpoint
                 (
                     ClaimsPrincipal user,
                     [FromServices] DoneTaskletsHandler handler,
-                    int skip = 0,
-                    int take = 25,
+                    [Range(0, 1000)] int skip = 0,
+                    [Range(10, 100)] int take = 25,
                     TaskletSortField? sort = null,
                     SortDirection direction = SortDirection.Descending
                 ) => handler.Handle(user, skip, take, sort, direction)
