@@ -1,6 +1,6 @@
 # Tasklet
 
-A v1, production read TODO list!
+A v1, production ready TODO list!
 
 ## Pre-requisites
 
@@ -11,7 +11,7 @@ A v1, production read TODO list!
 |Yarn|1.x|[Download](https://yarnpkg.com/getting-started/install)|
 |Docker|(latest)|[Download](https://www.docker.com/get-started/)|
 
-> I debated on whether to use the Firebase docker container or `npx`, but `npx` run version does not shut down cleanly and will lose the state for stop/restart cycles.`
+> I debated on whether to use the Firebase docker container or `npx`, but `npx` run version does not shut down cleanly and will lose the state for stop/restart cycles.
 
 ## How to Run
 
@@ -92,7 +92,7 @@ I feel like the "production" qualifier ended up pushing this from a 2 hour codin
 
 - Sqlite is chosen as it provides more capabilities (e.g. full-text search); though Postgres would have been preferred personally and feels a better fit for a production app supporting multiple instances.
   - Use a storage interface to allow for swapping out the underlying storage engine in the future (e.g. Postgres (EF Core backed), Firebase (not EF Core backed), etc.)
-- .NET minimal web APIs is suitable for this app due to the small surface area
+- .NET minimal web APIs is suitable for this app due to the small surface area; the separation of the raw HTTP endpoint from the handler logic forces a specific pattern and gives flexibility (e.g. the health endpoint just gets inlined).
 - Firebase emulator is used for auth as it provides a simple DX for local development and ease of use upstream
 - Global exception handler for the API surface area that will update to `Activity.Current` with exception details and also log the exception with `ILogger`
 - OpenTelemetry is used to provide observability and insights we will need in production
