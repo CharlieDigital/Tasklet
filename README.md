@@ -49,6 +49,8 @@ This will bring up Aspire with the following key components:
 
 Actually, the hardest part of this exercise was determining what "production ready" means.  The scope of that is really difficult to encapsulate in a weekend project 😅.
 
+(I spent waaay more time on this because of the qualifier...)
+
 For me, it means:
 
 - Operational telemetry and visibility into what the code is doing
@@ -92,8 +94,10 @@ I feel like the "production" qualifier ended up pushing this from a 2 hour codin
 ### Backend
 
 - Sqlite is chosen as it provides more capabilities (e.g. full-text search); though Postgres would have been preferred personally and feels a better fit for a production app supporting multiple instances.
+  - Use a storage interface to allow for swapping out the underlying storage engine in the future (e.g. Postgres (EF Core backed), Firebase (not EF Core backed), etc.)
 - .NET minimal web APIs is suitable for this app due to the small surface area
 - Firebase emulator is used for auth as it provides a simple DX for local development and ease of use upstream
+- Global exception handler for the API surface area that will update to `Activity.Current` with exception details and also log the exception with `ILogger`
 - OpenTelemetry is used to provide observability and insights we will need in production
   - On localhost, this goes to the Aspire dashboard
 - Use standard `ILogger` for this with `Serilog` injected in place (so we can configure it for OTEL sink).
@@ -123,8 +127,24 @@ I feel like the "production" qualifier ended up pushing this from a 2 hour codin
 
 This project includes a `Dockerfile` which packages the application for deployment.
 
+```shell
+# From root:
+docker build -t tasklet:local .
+```
+
 A good target for this is Google Cloud Run as this is capable of scaling to 0 which is a great way to run this economically.
 
 The container will package the Vue app into the .NET app's `wwwroot` and serve it with cache headers through Google's CDNs, allowing it to scale well.
 
 If I have time, I will deploy this to Cloud Run!
+
+## TODOs for TODO App
+
+Things I did not get done...
+
+- [] Fully test the container build and deployment to Cloud Run (might need another 2-3 hours)
+- [] Make the search and filtering work on the backend
+- [] Make use of the pagination; added to the API, but the demo dataset will be small
+- [] UX tweaks to make it easier to quickly update individual fields like color, status, etc. without going to edit tab
+- [] FTS5 Sqlite integration for better backend search capabilities
+- [] AI features like "agenda" and sorting by impact (due date and priority, urgency from the title, etc.)

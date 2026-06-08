@@ -30,10 +30,12 @@ COPY --parents ./src/**/*.csproj ./
 RUN dotnet restore ./src/backend/runtime/Tasklet.Runtime.csproj
 
 # Now copy the rest of the source code for the server
+COPY ./src/backend/core  ./src/backend/core
+COPY ./src/backend/sqlite  ./src/backend/sqlite
 COPY ./src/backend/runtime  ./src/backend/runtime
 
 # Copy the Vue SPA build output into the server's wwwroot
-COPY --from=web-build /srcroot/src/web/dist ./src/backend/runtime/wwwroot/app
+COPY --from=web-build /srcroot/src/web/dist ./src/backend/runtime/wwwroot/
 
 # Build the application without restore (already restored above)
 RUN dotnet publish ./src/backend/runtime/Tasklet.Runtime.csproj \
