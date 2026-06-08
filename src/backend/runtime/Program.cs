@@ -33,7 +33,7 @@ if (settings == null)
 
 // ⭐️ Add core services for Tasklet.
 builder
-    .Services.AddFirebaseAuthentication(settings)
+    .Services.AddFirebaseAuthentication(settings, builder.Environment)
     .AddTaskletHttp(settings)
     .AddTaskletStorage(settings);
 

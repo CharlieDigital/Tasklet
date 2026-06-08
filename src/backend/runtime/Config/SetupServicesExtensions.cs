@@ -36,10 +36,13 @@ public static class SetupServicesExtensions
         /// <summary>
         /// Sets up Firebase Admin SDK for authentication.
         /// </summary>
-        public IServiceCollection AddFirebaseAuthentication(AppSettings settings)
+        public IServiceCollection AddFirebaseAuthentication(
+            AppSettings settings,
+            IWebHostEnvironment env
+        )
         {
             var projectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id";
-            var credential = GetFirebaseCredential();
+            var credential = GetFirebaseCredential(env);
 
             FirebaseApp.Create(new AppOptions() { Credential = credential, ProjectId = projectId });
 
@@ -62,14 +65,15 @@ public static class SetupServicesExtensions
         /// initialization. A static access-token credential avoids forcing local
         /// Google ADC setup while keeping production on real ADC.
         /// </remarks>
-        private static GoogleCredential GetFirebaseCredential()
+        private static GoogleCredential GetFirebaseCredential(IWebHostEnvironment env)
         {
             var firebaseAuthEmulatorHost = Environment.GetEnvironmentVariable(
                 FirebaseAuthEmulatorHostEnvironmentVariable
             );
 
-            if (!string.IsNullOrWhiteSpace(firebaseAuthEmulatorHost))
+            if (!string.IsNullOrWhiteSpace(firebaseAuthEmulatorHost) || env.IsDevelopment())
             {
+                // Use a fake credential for local development
                 return GoogleCredential.FromAccessToken(FirebaseAuthEmulatorAccessToken);
             }
 
