@@ -73,13 +73,10 @@ I feel like the "production" qualifier ended up pushing this from a 2 hour codin
 ## Features
 
 - Basic task management: create, read, update, delete tasks
-- Full-text search on tasks via Sqlite
-- Views by day, priority, color
-- Heatmap visualization
-- Timeline visualization
-- Optional AI features:
-  - Semantic search with embeddings
-  - AI summaries
+- Quick add tasks with minimal required fields (e.g. just title)
+- View tasks by pinned, all, and done
+- Dense view and normal view toggle
+- Log in/log out
 
 ## Key Decisions
 

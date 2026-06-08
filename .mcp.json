@@ -1,11 +1,30 @@
 {
   "mcpServers": {
+    "glider": {
+      "type": "stdio",
+      "command": "glider",
+      "args": [
+        "--default-timeout",
+        "30m"
+      ],
+      "env": {}
+    },
     "aspire": {
+      "type": "stdio",
       "command": "aspire",
       "args": [
         "agent",
         "mcp"
-      ]
+      ],
+      "env": {}
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
     }
   }
 }

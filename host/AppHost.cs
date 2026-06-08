@@ -66,7 +66,6 @@ var frontend = builder
             url.Url = "http://tasklet.localhost:8089";
         }
     );
-;
 
 // Yarp proxy to make it more pleasant to use.
 var proxy = builder
