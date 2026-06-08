@@ -68,7 +68,9 @@ public class TaskletEndpointTests
         await Assert.That(storage.LastTake).IsEqualTo(100);
         await Assert.That(storage.LastSortDirection).IsEqualTo(SortDirection.Ascending);
         await Assert.That(storage.LastFilter).IsEqualTo("urgent");
-        await Assert.That(SortedMemberName(storage.LastOrderBy)).IsEqualTo(nameof(ISortableTasklet.Priority));
+        await Assert
+            .That(SortedMemberName(storage.LastOrderBy))
+            .IsEqualTo(nameof(ISortableTasklet.Priority));
     }
 
     [Test]
@@ -157,7 +159,9 @@ public class TaskletEndpointTests
         await Assert.That(storage.LastSkip).IsEqualTo(2);
         await Assert.That(storage.LastTake).IsEqualTo(25);
         await Assert.That(storage.LastSortDirection).IsEqualTo(SortDirection.Ascending);
-        await Assert.That(SortedMemberName(storage.LastOrderBy)).IsEqualTo(nameof(ISortableTasklet.DueAtUtc));
+        await Assert
+            .That(SortedMemberName(storage.LastOrderBy))
+            .IsEqualTo(nameof(ISortableTasklet.DueAtUtc));
     }
 
     [Test]
@@ -327,7 +331,11 @@ public class TaskletEndpointTests
         var storage = new FakeTaskletStorage();
         var handler = new UpdateTaskletHandler(storage);
 
-        var result = await handler.Handle(User("user-1"), Guid.NewGuid(), UpdateRequest(title: "After"));
+        var result = await handler.Handle(
+            User("user-1"),
+            Guid.NewGuid(),
+            UpdateRequest(title: "After")
+        );
 
         await Assert.That(result.Result).IsOfType(typeof(NotFound));
         await Assert.That(storage.UpdatedTasklet).IsNull();
@@ -549,18 +557,7 @@ public class TaskletEndpointTests
         Color? color = null,
         DateTime? completedAtUtc = null,
         DateTime? dueAtUtc = null
-    ) =>
-        new(
-            title,
-            body,
-            status,
-            priority,
-            explicitOrder,
-            pinned,
-            color,
-            completedAtUtc,
-            dueAtUtc
-        );
+    ) => new(title, body, status, priority, explicitOrder, pinned, color, completedAtUtc, dueAtUtc);
 
     private static UpdateTaskletRequest UpdateRequest(
         string title,
@@ -608,7 +605,9 @@ public class TaskletEndpointTests
         orderBy?.Body switch
         {
             MemberExpression memberExpression => memberExpression.Member.Name,
-            UnaryExpression { Operand: MemberExpression memberExpression } => memberExpression.Member.Name,
+            UnaryExpression { Operand: MemberExpression memberExpression } => memberExpression
+                .Member
+                .Name,
             _ => null,
         };
 

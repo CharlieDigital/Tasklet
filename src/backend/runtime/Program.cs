@@ -35,7 +35,8 @@ if (settings == null)
 builder
     .Services.AddFirebaseAuthentication(settings, builder.Environment)
     .AddTaskletHttp(settings)
-    .AddTaskletStorage(settings);
+    .AddTaskletStorage(settings)
+    .AddTaskletTelemetry();
 
 var app = builder.Build();
 

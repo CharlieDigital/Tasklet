@@ -1,7 +1,9 @@
+using System.Diagnostics.Metrics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Tasklet.Core.Endpoints;
 using Tasklet.Core.Model;
+using Tasklet.Core.Telemetry;
 
 namespace Tasklet.Runtime.Endpoints;
 
@@ -10,6 +12,12 @@ namespace Tasklet.Runtime.Endpoints;
 /// </summary>
 public class UpdateTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 {
+    private static readonly Counter<int> UpdateCounter =
+        TaskletTelemetry.Metrics.CreateCounter<int>(
+            "update_tasklet_count",
+            description: "The number of Tasklets updated."
+        );
+
     /// <summary>
     /// Handles Tasklet updates while preserving ownership and creation time.
     /// </summary>
@@ -21,6 +29,8 @@ public class UpdateTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (userId is null)
         {
+            TaskletTelemetry.AddEvent([("tasklet.id", id)], "tasklet.update.unauthorized");
+
             return TypedResults.Unauthorized();
         }
 
@@ -28,6 +38,8 @@ public class UpdateTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (validationError is not null)
         {
+            TaskletTelemetry.AddEvent([("tasklet.id", id)], "tasklet.update.validation_failed");
+
             return TypedResults.BadRequest(validationError);
         }
 
@@ -35,11 +47,16 @@ public class UpdateTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (existing is null || existing.UserId != userId)
         {
+            TaskletTelemetry.AddEvent([("tasklet.id", id)], "tasklet.update.not_found");
+
             return TypedResults.NotFound();
         }
 
         request.ApplyTo(existing);
         await storage.UpdateTaskletAsync(existing);
+
+        UpdateCounter.Add(1);
+        TaskletTelemetry.AddEvent([("tasklet.id", id)], "tasklet.update.succeeded");
 
         return TypedResults.Ok(existing.ToResponse());
     }

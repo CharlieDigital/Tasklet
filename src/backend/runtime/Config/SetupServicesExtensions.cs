@@ -29,7 +29,6 @@ public static class SetupServicesExtensions
     private static readonly Dictionary<string, object> DefaultAttributes = new()
     {
         ["service"] = "tasklet",
-        ["service.name"] = "tasklet",
     };
 
     // Extension methods for the IServiceCollection to set up services.
@@ -130,6 +129,8 @@ public static class SetupServicesExtensions
             );
 
             services.AddAuthorization();
+            services.AddExceptionHandler<TaskletExceptionHandler>();
+            services.AddProblemDetails();
 
             // Configure JSON options for consistent serialization across the app.
             services.ConfigureHttpJsonOptions(json =>
@@ -191,21 +192,18 @@ public static class SetupServicesExtensions
             // TODO(production): Add more instrumentation for EF, HTTP, etc. (too noisy right now)
             services
                 .AddOpenTelemetry()
-                .ConfigureResource(r => r.AddService("tasklet").AddAttributes(DefaultAttributes))
+                // Aspire owns service.name through OTEL_SERVICE_NAME, so only
+                // add Tasklet-specific attributes here to avoid breaking
+                // dashboard resource grouping for traces and metrics.
+                .ConfigureResource(r => r.AddAttributes(DefaultAttributes))
                 .WithTracing(b =>
                 {
-                    b.AddSource(
-                            "Tasklet.*",
-                            "System.Net.Http",
-                            "Private.InternalDiagnostics.System.Net.Http"
-                        )
+                    b.AddSource("*")
                         .AddAspNetCoreInstrumentation(config =>
                         {
                             config.RecordException = true;
                         })
-                        .ConfigureResource(r =>
-                            r.AddService("tasklet:http").AddAttributes(DefaultAttributes)
-                        );
+                        .ConfigureResource(r => r.AddAttributes(DefaultAttributes));
                 })
                 .WithMetrics(b => b.AddMeter("*").AddAspNetCoreInstrumentation())
                 .WithLogging()

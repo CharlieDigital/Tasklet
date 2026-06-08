@@ -145,7 +145,11 @@ public partial class SqliteStorageProvider(
     }
 
     /// <inheritdoc/>
-    public async Task<Core.Model.Tasklet?> SetTaskletPinnedAsync(Guid id, string userId, bool pinned)
+    public async Task<Core.Model.Tasklet?> SetTaskletPinnedAsync(
+        Guid id,
+        string userId,
+        bool pinned
+    )
     {
         var existing = await context.Tasklets.SingleOrDefaultAsync(row =>
             row.Id == id && row.UserId == userId

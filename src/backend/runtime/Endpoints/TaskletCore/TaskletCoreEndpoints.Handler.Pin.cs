@@ -1,7 +1,9 @@
+using System.Diagnostics.Metrics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Tasklet.Core.Endpoints;
 using Tasklet.Core.Model;
+using Tasklet.Core.Telemetry;
 
 namespace Tasklet.Runtime.Endpoints;
 
@@ -10,6 +12,11 @@ namespace Tasklet.Runtime.Endpoints;
 /// </summary>
 public class PinTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 {
+    private static readonly Counter<int> PinCounter = TaskletTelemetry.Metrics.CreateCounter<int>(
+        "pin_tasklet_count",
+        description: "The number of Tasklet pin state changes."
+    );
+
     /// <summary>
     /// Marks a Tasklet as pinned for the current user.
     /// </summary>
@@ -39,6 +46,11 @@ public class PinTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (userId is null)
         {
+            TaskletTelemetry.AddEvent(
+                [("tasklet.id", id), ("pinned", pinned)],
+                "tasklet.pin.unauthorized"
+            );
+
             return TypedResults.Unauthorized();
         }
 
@@ -46,8 +58,19 @@ public class PinTaskletHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (tasklet is null)
         {
+            TaskletTelemetry.AddEvent(
+                [("tasklet.id", id), ("pinned", pinned)],
+                "tasklet.pin.not_found"
+            );
+
             return TypedResults.NotFound();
         }
+
+        PinCounter.Add(1);
+        TaskletTelemetry.AddEvent(
+            [("tasklet.id", id), ("pinned", pinned)],
+            "tasklet.pin.succeeded"
+        );
 
         return TypedResults.Ok(tasklet.ToResponse());
     }

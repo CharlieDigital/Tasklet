@@ -22,6 +22,8 @@ public static class SetupAppExtensions
             // We want to serve the web app from the root URL so we'll serve the backend from /api.
             app.UsePathBase("/api");
 
+            app.UseExceptionHandler();
+
             app.UseCors("api-cors-policy");
 
             app.UseAuthentication();
@@ -54,6 +56,12 @@ public static class SetupAppExtensions
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference("/scalar");
+
+                app.MapGet("/testing/exception", ThrowTestException)
+                    .AllowAnonymous()
+                    .WithName("ThrowTestException")
+                    .WithTags("Testing")
+                    .WithDescription("Throws an exception to verify global error handling.");
             }
 
             // TODO(production): Test this config by building the container
@@ -86,6 +94,14 @@ public static class SetupAppExtensions
             }
 
             return app;
+        }
+
+        /// <summary>
+        /// Development-only route target that exercises global exception handling.
+        /// </summary>
+        private static IResult ThrowTestException()
+        {
+            throw new InvalidOperationException("Tasklet test exception endpoint was invoked.");
         }
     }
 

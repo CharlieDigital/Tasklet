@@ -1,7 +1,9 @@
+using System.Diagnostics.Metrics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Tasklet.Core.Endpoints;
 using Tasklet.Core.Model;
+using Tasklet.Core.Telemetry;
 
 namespace Tasklet.Runtime.Endpoints;
 
@@ -10,6 +12,11 @@ namespace Tasklet.Runtime.Endpoints;
 /// </summary>
 public class ListTaskletsHandler(ITaskletStorage storage) : IEndpointHandler
 {
+    private static readonly Counter<int> ListCounter = TaskletTelemetry.Metrics.CreateCounter<int>(
+        "list_tasklet_count",
+        description: "The number of Tasklet list requests served."
+    );
+
     /// <summary>
     /// Handles the current user's Tasklet list query.
     /// </summary>
@@ -26,6 +33,8 @@ public class ListTaskletsHandler(ITaskletStorage storage) : IEndpointHandler
 
         if (userId is null)
         {
+            TaskletTelemetry.AddEvent([], "tasklet.list.unauthorized");
+
             return TypedResults.Unauthorized();
         }
 
@@ -39,10 +48,20 @@ public class ListTaskletsHandler(ITaskletStorage storage) : IEndpointHandler
             direction,
             filter
         );
-        var response = new TaskletListResponse(
-            tasklets.Select(tasklet => tasklet.ToResponse()).ToList(),
-            normalizedSkip,
-            normalizedTake
+        var taskletResponses = tasklets.Select(tasklet => tasklet.ToResponse()).ToList();
+        var response = new TaskletListResponse(taskletResponses, normalizedSkip, normalizedTake);
+
+        ListCounter.Add(1);
+        TaskletTelemetry.AddEvent(
+            [
+                ("skip", normalizedSkip),
+                ("take", normalizedTake),
+                ("sort", sort?.ToString()),
+                ("direction", direction.ToString()),
+                ("has_filter", !string.IsNullOrWhiteSpace(filter)),
+                ("tasklet.count", taskletResponses.Count),
+            ],
+            "tasklet.list.succeeded"
         );
 
         return TypedResults.Ok(response);
