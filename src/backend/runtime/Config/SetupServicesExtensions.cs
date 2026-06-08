@@ -20,6 +20,10 @@ namespace Tasklet.Runtime.Config;
 /// </summary>
 public static class SetupServicesExtensions
 {
+    private const string FirebaseAuthEmulatorHostEnvironmentVariable =
+        "FIREBASE_AUTH_EMULATOR_HOST";
+    private const string FirebaseAuthEmulatorAccessToken = "firebase-auth-emulator";
+
     private static readonly Dictionary<string, object> DefaultAttributes = new()
     {
         ["service"] = "tasklet",
@@ -35,14 +39,9 @@ public static class SetupServicesExtensions
         public IServiceCollection AddFirebaseAuthentication(AppSettings settings)
         {
             var projectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id";
+            var credential = GetFirebaseCredential();
 
-            FirebaseApp.Create(
-                new AppOptions()
-                {
-                    Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = projectId,
-                }
-            );
+            FirebaseApp.Create(new AppOptions() { Credential = credential, ProjectId = projectId });
 
             services
                 .AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
@@ -52,6 +51,29 @@ public static class SetupServicesExtensions
                 );
 
             return services;
+        }
+
+        /// <summary>
+        /// Selects the Firebase Admin credential for the active auth target.
+        /// </summary>
+        /// <remarks>
+        /// The Auth emulator is selected by <c>FIREBASE_AUTH_EMULATOR_HOST</c>,
+        /// but FirebaseAdmin still requires a credential object during app
+        /// initialization. A static access-token credential avoids forcing local
+        /// Google ADC setup while keeping production on real ADC.
+        /// </remarks>
+        private static GoogleCredential GetFirebaseCredential()
+        {
+            var firebaseAuthEmulatorHost = Environment.GetEnvironmentVariable(
+                FirebaseAuthEmulatorHostEnvironmentVariable
+            );
+
+            if (!string.IsNullOrWhiteSpace(firebaseAuthEmulatorHost))
+            {
+                return GoogleCredential.FromAccessToken(FirebaseAuthEmulatorAccessToken);
+            }
+
+            return GoogleCredential.GetApplicationDefault();
         }
 
         /// <summary>
