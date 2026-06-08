@@ -43,6 +43,8 @@
             "name": "skip",
             "in": "query",
             "schema": {
+              "maximum": 1000,
+              "minimum": 0,
               "type": "integer",
               "format": "int32",
               "default": 0
@@ -52,6 +54,8 @@
             "name": "take",
             "in": "query",
             "schema": {
+              "maximum": 100,
+              "minimum": 10,
               "type": "integer",
               "format": "int32",
               "default": 25
@@ -76,6 +80,7 @@
             "name": "filter",
             "in": "query",
             "schema": {
+              "maxLength": 100,
               "type": "string"
             }
           }
@@ -145,6 +150,8 @@
             "name": "skip",
             "in": "query",
             "schema": {
+              "maximum": 1000,
+              "minimum": 0,
               "type": "integer",
               "format": "int32",
               "default": 0
@@ -154,6 +161,8 @@
             "name": "take",
             "in": "query",
             "schema": {
+              "maximum": 100,
+              "minimum": 10,
               "type": "integer",
               "format": "int32",
               "default": 25
@@ -201,6 +210,8 @@
             "name": "skip",
             "in": "query",
             "schema": {
+              "maximum": 1000,
+              "minimum": 0,
               "type": "integer",
               "format": "int32",
               "default": 0
@@ -210,6 +221,8 @@
             "name": "take",
             "in": "query",
             "schema": {
+              "maximum": 100,
+              "minimum": 10,
               "type": "integer",
               "format": "int32",
               "default": 25

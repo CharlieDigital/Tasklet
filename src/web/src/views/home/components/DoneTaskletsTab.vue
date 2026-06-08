@@ -9,6 +9,8 @@
       :loading="loading"
       :quick-add-loading="quickAddLoading"
       :dense="dense"
+      :show-pin-action="false"
+      :show-complete-action="false"
       empty-title="No completed tasklets"
       empty-description="Completed tasklets will appear here."
       @pin="emit('pin', $event)"

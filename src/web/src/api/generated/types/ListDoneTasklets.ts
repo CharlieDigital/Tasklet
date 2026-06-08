@@ -9,11 +9,15 @@ import type { TaskletSortField } from "./TaskletSortField.ts";
 
 export type ListDoneTaskletsQueryParams = {
     /**
+     * @minLength 0
+     * @maxLength 1000
      * @default 0
      * @type integer | undefined, int32
     */
     skip?: number | undefined;
     /**
+     * @minLength 10
+     * @maxLength 100
      * @default 25
      * @type integer | undefined, int32
     */

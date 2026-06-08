@@ -6,6 +6,8 @@
           v-for="tasklet in tasklets"
           :key="tasklet.id"
           :tasklet="tasklet"
+          :show-pin-action="showPinAction"
+          :show-complete-action="showCompleteAction"
           @pin="emit('pin', $event)"
           @complete="emit('complete', $event)"
           @edit="emit('edit', $event)"
@@ -58,15 +60,23 @@ import {
 } from "naive-ui";
 import { h } from "vue";
 
-defineProps<{
-  tasklets: TaskletResponse[];
-  loading: boolean;
-  quickAddLoading: boolean;
-  showEmptyQuickAdd?: boolean;
-  emptyTitle: string;
-  emptyDescription: string;
-  dense: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    tasklets: TaskletResponse[];
+    loading: boolean;
+    quickAddLoading: boolean;
+    showEmptyQuickAdd?: boolean;
+    emptyTitle: string;
+    emptyDescription: string;
+    dense: boolean;
+    showPinAction?: boolean;
+    showCompleteAction?: boolean;
+  }>(),
+  {
+    showPinAction: true,
+    showCompleteAction: true,
+  },
+);
 
 const emit = defineEmits<{
   pin: [tasklet: TaskletResponse];
@@ -105,11 +115,26 @@ const columns = computed<DataTableColumns<TaskletResponse>>(() => [
   {
     title: "Actions",
     key: "actions",
-    width: 168,
+    width: actionColumnWidth.value,
     resizable: true,
     render: renderActionsCell,
   },
 ]);
+
+/**
+ * Action visibility is owned by the active tab; dense mode mirrors that same
+ * contract with a tighter column when Done only exposes edit/delete.
+ */
+const actionColumnWidth = computed(() => {
+  const visibleActionCount = [
+    props.showPinAction,
+    props.showCompleteAction,
+    true,
+    true,
+  ].filter(Boolean).length;
+
+  return Math.max(96, visibleActionCount * 42);
+});
 
 function rowKey(tasklet: TaskletResponse) {
   return tasklet.id;
@@ -162,6 +187,8 @@ function renderStatusCell(tasklet: TaskletResponse) {
 function renderActionsCell(tasklet: TaskletResponse) {
   return h(TaskletActionGroup, {
     tasklet,
+    showPinAction: props.showPinAction,
+    showCompleteAction: props.showCompleteAction,
     onPin: (target: TaskletResponse) => emit("pin", target),
     onComplete: (target: TaskletResponse) => emit("complete", target),
     onEdit: (target: TaskletResponse) => emit("edit", target),

@@ -4,7 +4,7 @@
     class="tasklet-actions"
     :class="{ 'tasklet-actions-hidden': showOnHover && !visible }"
   >
-    <NTooltip>
+    <NTooltip v-if="showPinAction">
       <template #trigger>
         <NButton
           tertiary
@@ -23,7 +23,7 @@
       {{ tasklet.pinned ? "Unpin" : "Pin" }}
     </NTooltip>
 
-    <NTooltip>
+    <NTooltip v-if="showCompleteAction">
       <template #trigger>
         <NButton
           tertiary
@@ -94,11 +94,15 @@ withDefaults(
     tasklet: TaskletResponse;
     visible?: boolean;
     showOnHover?: boolean;
+    showPinAction?: boolean;
+    showCompleteAction?: boolean;
     size?: ButtonGroupProps["size"];
   }>(),
   {
     visible: true,
     showOnHover: false,
+    showPinAction: true,
+    showCompleteAction: true,
     size: "small",
   },
 );
