@@ -2,6 +2,9 @@ using Aspire.Hosting.Yarp;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+// This makes it easier to start without manually creating .env file (which has no secrets in this case)
+EnsureFrontendEnvironmentFile(builder.AppHostDirectory);
+
 const string FirebaseEmulatorVolumePath = "/srv/firebase/.data-volume";
 const string FirebaseEmulatorDataPath = $"{FirebaseEmulatorVolumePath}/export";
 const string FirebaseEmulatorDataVolumeName = "tasklet-firebase-emulator-data";
@@ -20,7 +23,6 @@ var backend = builder
             url.Url = "http://api.localhost:8089/scalar";
         }
     );
-;
 
 // Standalone watch-build that passes an MSBuild property so schema generation
 // works consistently across shells and operating systems.
@@ -81,3 +83,27 @@ var proxy = builder
     });
 
 builder.Build().Run();
+
+static void EnsureFrontendEnvironmentFile(string appHostDirectory)
+{
+    var frontendDirectory = Path.GetFullPath(Path.Combine(appHostDirectory, "..", "src", "web"));
+    var envPath = Path.Combine(frontendDirectory, ".env");
+
+    if (File.Exists(envPath))
+    {
+        return;
+    }
+
+    var envExamplePath = Path.Combine(frontendDirectory, ".env.example");
+
+    if (!File.Exists(envExamplePath))
+    {
+        throw new FileNotFoundException(
+            "The frontend .env file is missing and no .env.example file exists to seed it.",
+            envExamplePath
+        );
+    }
+
+    // Seed local Vite configuration once so the frontend starts cleanly in a fresh checkout.
+    File.Copy(envExamplePath, envPath, overwrite: false);
+}

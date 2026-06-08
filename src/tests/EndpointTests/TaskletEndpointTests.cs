@@ -20,7 +20,7 @@ namespace Tasklet.Tests.EndpointTests;
 public class TaskletEndpointTests
 {
     [Test]
-    public async Task List_ReturnsUnauthorized_WhenUserIdClaimIsMissing()
+    public async Task List_WhenUserIdClaimIsMissing_ReturnsUnauthorized()
     {
         // Guards that list queries require the Firebase user_id claim before
         // storage is touched.
@@ -34,7 +34,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task List_CallsStorageWithAuthenticatedUserId()
+    public async Task List_WhenUserIsAuthenticated_CallsStorageWithAuthenticatedUserId()
     {
         // Guards that list queries are scoped to the authenticated Firebase
         // user ID instead of accepting ownership from the request.
@@ -48,7 +48,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task List_PassesPagingSortDirectionAndFilterToStorage()
+    public async Task List_WhenQueryOptionsAreProvided_PassesPagingSortDirectionAndFilterToStorage()
     {
         // Guards that list query knobs are normalized and forwarded to the
         // storage boundary.
@@ -74,7 +74,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task List_MapsStorageTaskletsToResponse()
+    public async Task List_WhenStorageReturnsTasklets_MapsTaskletsToResponse()
     {
         // Guards that list responses expose the Tasklet fields returned by
         // storage without changing their meaning.
@@ -111,7 +111,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pinned_ReturnsUnauthorized_WhenUserIdClaimIsMissing()
+    public async Task Pinned_WhenUserIdClaimIsMissing_ReturnsUnauthorized()
     {
         // Guards that pinned queries require the Firebase user_id claim before
         // storage is touched.
@@ -125,7 +125,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pinned_UsesExplicitPinnedStorageEntryPoint()
+    public async Task Pinned_WhenUserIsAuthenticated_UsesPinnedStorageEntryPoint()
     {
         // Guards that the pinned API calls the dedicated important-task query
         // instead of reusing the general list endpoint with a hidden filter.
@@ -141,7 +141,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pinned_PassesPagingSortAndDirectionToStorage()
+    public async Task Pinned_WhenQueryOptionsAreProvided_PassesPagingSortAndDirectionToStorage()
     {
         // Guards that the pinned API supports the same bounded paging and sort
         // direction behavior as the main list API.
@@ -165,7 +165,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pinned_MapsStorageTaskletsToResponse()
+    public async Task Pinned_WhenStorageReturnsTasklets_MapsTaskletsToResponse()
     {
         // Guards that pinned responses use the same response model as the main
         // list so the frontend has one Tasklet shape to consume.
@@ -184,7 +184,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Done_UsesExplicitDoneStorageEntryPoint()
+    public async Task Done_WhenUserIsAuthenticated_UsesDoneStorageEntryPoint()
     {
         // Guards that the Done API calls the dedicated completed-task query the
         // frontend Done tab will consume.
@@ -203,7 +203,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Get_ReturnsUnauthorized_WhenUserIdClaimIsMissing()
+    public async Task Get_WhenUserIdClaimIsMissing_ReturnsUnauthorized()
     {
         // Guards that single Tasklet reads require authentication before
         // loading any row by ID.
@@ -217,7 +217,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Get_ReturnsNotFound_WhenTaskletIsMissing()
+    public async Task Get_WhenTaskletIsMissing_ReturnsNotFound()
     {
         // Guards that missing Tasklet reads return 404 instead of leaking
         // storage details.
@@ -230,7 +230,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Get_ReturnsNotFound_WhenTaskletBelongsToAnotherUser()
+    public async Task Get_WhenTaskletBelongsToAnotherUser_ReturnsNotFound()
     {
         // Guards that reads do not reveal another user's Tasklet even when the
         // caller knows its ID.
@@ -243,7 +243,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Get_ReturnsTasklet_WhenOwnedByAuthenticatedUser()
+    public async Task Get_WhenTaskletIsOwnedByAuthenticatedUser_ReturnsTasklet()
     {
         // Guards that owned Tasklets can be read through the API response
         // mapper.
@@ -261,7 +261,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Create_ReturnsUnauthorized_WhenUserIdClaimIsMissing()
+    public async Task Create_WhenUserIdClaimIsMissing_ReturnsUnauthorized()
     {
         // Guards that creates require authentication before the request is
         // mapped into a Tasklet.
@@ -275,7 +275,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Create_ReturnsBadRequest_WhenTitleIsBlank()
+    public async Task Create_WhenTitleIsBlank_ReturnsBadRequest()
     {
         // Guards that creates reject blank titles before writing to storage.
         var storage = new FakeTaskletStorage();
@@ -288,7 +288,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Create_AssignsUserIdFromClaims()
+    public async Task Create_WhenRequestIsValid_AssignsUserIdFromClaims()
     {
         // Guards that Tasklet ownership comes from Firebase claims, not from
         // client-controlled request content.
@@ -302,7 +302,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Create_AppliesDefaultsForOptionalFields()
+    public async Task Create_WhenOptionalFieldsAreOmitted_AppliesDefaults()
     {
         // Guards that omitted create fields use the domain defaults the UI can
         // rely on after a quick-add flow.
@@ -324,7 +324,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Update_ReturnsNotFound_WhenTaskletIsMissing()
+    public async Task Update_WhenTaskletIsMissing_ReturnsNotFound()
     {
         // Guards that updating a missing Tasklet returns 404 with a valid
         // request body.
@@ -342,7 +342,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Update_ReturnsNotFound_WhenTaskletBelongsToAnotherUser()
+    public async Task Update_WhenTaskletBelongsToAnotherUser_ReturnsNotFound()
     {
         // Guards that updates cannot change another user's Tasklet even when
         // the caller knows its ID.
@@ -360,7 +360,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Update_PreservesUserIdAndCreatedAt()
+    public async Task Update_WhenRequestIsValid_PreservesUserIdAndCreatedAt()
     {
         // Guards that API updates only mutate editable fields and leave
         // ownership plus creation time alone.
@@ -377,7 +377,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Update_PersistsMutableFields()
+    public async Task Update_WhenMutableFieldsChange_PersistsMutableFields()
     {
         // Guards that every mutable Tasklet field accepted by the API is sent
         // to storage.
@@ -418,7 +418,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pin_CallsScopedStorageAndReturnsUpdatedTasklet()
+    public async Task Pin_WhenTaskletIsOwned_CallsScopedStorageAndReturnsUpdatedTasklet()
     {
         // Guards that pinning uses the direct storage entry point rather than
         // requiring clients to send a full update payload.
@@ -436,7 +436,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Unpin_CallsScopedStorageAndReturnsUpdatedTasklet()
+    public async Task Unpin_WhenTaskletIsOwned_CallsScopedStorageAndReturnsUpdatedTasklet()
     {
         // Guards that unpinning uses the same direct storage entry point with
         // an explicit false value.
@@ -454,7 +454,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Pin_ReturnsNotFound_WhenStorageFindsNoOwnedTasklet()
+    public async Task Pin_WhenStorageFindsNoOwnedTasklet_ReturnsNotFound()
     {
         var storage = new FakeTaskletStorage();
         var handler = new PinTaskletHandler(storage);
@@ -465,7 +465,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Complete_CallsScopedStorageAndReturnsUpdatedTasklet()
+    public async Task Complete_WhenTaskletIsOwned_CallsScopedStorageAndReturnsUpdatedTasklet()
     {
         // Guards that completion has a direct endpoint which sets completion
         // server-side without clients posting every mutable Tasklet field.
@@ -488,7 +488,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Complete_ReturnsNotFound_WhenStorageFindsNoOwnedTasklet()
+    public async Task Complete_WhenStorageFindsNoOwnedTasklet_ReturnsNotFound()
     {
         var storage = new FakeTaskletStorage();
         var handler = new CompleteTaskletHandler(storage);
@@ -499,7 +499,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Delete_ReturnsNotFound_WhenTaskletIsMissing()
+    public async Task Delete_WhenTaskletIsMissing_ReturnsNotFound()
     {
         // Guards that deleting a missing Tasklet returns 404 instead of
         // treating it as an owned delete.
@@ -513,7 +513,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Delete_ReturnsNotFound_WhenTaskletBelongsToAnotherUser()
+    public async Task Delete_WhenTaskletBelongsToAnotherUser_ReturnsNotFound()
     {
         // Guards that deletes do not remove another user's Tasklet even when
         // the caller knows its ID.
@@ -527,7 +527,7 @@ public class TaskletEndpointTests
     }
 
     [Test]
-    public async Task Delete_CallsStorageWhenTaskletIsOwned()
+    public async Task Delete_WhenTaskletIsOwned_CallsStorage()
     {
         // Guards that owned deletes call storage and return the API no-content
         // result expected by clients.

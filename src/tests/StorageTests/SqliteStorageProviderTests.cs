@@ -22,7 +22,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     : SqliteTransactionalTestBase(fixture)
 {
     [Test]
-    public async Task InitializeAsync_CreatesSchema_ForTempDatabase()
+    public async Task InitializeAsync_ForTempDatabase_CreatesSchema()
     {
         // Guards that provider initialization creates the Tasklets table through
         // the migration path used by production startup.
@@ -36,7 +36,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task CreateTaskletAsync_AssignsVersion7Id_WhenIdIsEmpty()
+    public async Task CreateTaskletAsync_WhenIdIsEmpty_AssignsVersion7Id()
     {
         // Guards that new Tasklets without an ID receive a UUIDv7 value before
         // being persisted.
@@ -52,7 +52,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task CreateTaskletAsync_PreservesExplicitId_WhenProvided()
+    public async Task CreateTaskletAsync_WhenExplicitIdIsProvided_PreservesExplicitId()
     {
         // Guards that callers can provide an ID and the provider will not
         // replace it during creation.
@@ -65,7 +65,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletByIdAsync_ReturnsNull_WhenMissing()
+    public async Task GetTaskletByIdAsync_WhenTaskletIsMissing_ReturnsNull()
     {
         // Guards that missing Tasklet lookups return null instead of throwing.
         var tasklet = await Provider.GetTaskletByIdAsync(Guid.NewGuid());
@@ -74,7 +74,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_ReturnsOnlyRequestedUser()
+    public async Task GetTaskletsForUserAsync_WhenOtherUsersHaveTasklets_ReturnsOnlyRequestedUserTasklets()
     {
         // Guards that list queries are scoped to the requested user and do not
         // leak another user's Tasklets.
@@ -88,7 +88,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_AppliesSkipTake()
+    public async Task GetTaskletsForUserAsync_WhenSkipAndTakeAreProvided_AppliesPaging()
     {
         // Guards that list queries apply paging after the deterministic default
         // ordering.
@@ -142,7 +142,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_CapsTakeAtOneHundred()
+    public async Task GetTaskletsForUserAsync_WhenTakeExceedsLimit_CapsTakeAtOneHundred()
     {
         // Guards that storage bounds oversized pages so callers cannot request
         // unbounded result sets.
@@ -165,7 +165,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_FiltersTitleAndBody()
+    public async Task GetTaskletsForUserAsync_WhenFilterMatchesTitleOrBody_ReturnsMatchingTasklets()
     {
         // Guards that the text filter searches both title and body using
         // provider-translated SQL.
@@ -187,7 +187,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_EscapesLikeWildcards()
+    public async Task GetTaskletsForUserAsync_WhenFilterContainsLikeWildcards_TreatsWildcardsAsLiterals()
     {
         // Guards that LIKE wildcard characters in user filters are treated as
         // literal text.
@@ -204,7 +204,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_SortsByRequestedMemberAndDirection()
+    public async Task GetTaskletsForUserAsync_WhenSortMemberAndDirectionAreProvided_SortsByRequestedMemberAndDirection()
     {
         // Guards that explicit sort field and sort direction are both honored
         // after pinned-first ordering.
@@ -237,7 +237,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetTaskletsForUserAsync_DefaultSortsPinnedThenNewest()
+    public async Task GetTaskletsForUserAsync_WhenSortIsDefault_OrdersPinnedThenNewest()
     {
         // Guards that the default ordering puts pinned Tasklets first, then
         // unpinned Tasklets newest-first.
@@ -272,7 +272,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetPinnedTaskletsForUserAsync_ReturnsOnlyPinnedForRequestedUser()
+    public async Task GetPinnedTaskletsForUserAsync_WhenOtherTaskletsExist_ReturnsOnlyPinnedTaskletsForRequestedUser()
     {
         // Guards that the pinned entry point returns only important Tasklets for
         // the requested user.
@@ -291,7 +291,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetPinnedTaskletsForUserAsync_AppliesPagingAndSortDirection()
+    public async Task GetPinnedTaskletsForUserAsync_WhenPagingAndSortDirectionAreProvided_AppliesPagingAndSortDirection()
     {
         // Guards that the pinned entry point uses the same bounded paging and
         // explicit sort direction rules as the normal list query.
@@ -320,7 +320,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task GetDoneTaskletsForUserAsync_ReturnsOnlyCompletedForRequestedUser()
+    public async Task GetDoneTaskletsForUserAsync_WhenOtherTaskletsExist_ReturnsOnlyCompletedTaskletsForRequestedUser()
     {
         // Guards that the Done tab's storage query is a first-class completed
         // task query rather than a client-side filter over all Tasklets.
@@ -341,7 +341,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task SetTaskletPinnedAsync_UpdatesOnlyOwnedTasklet()
+    public async Task SetTaskletPinnedAsync_WhenCalledForOwnedAndUnownedTasklet_UpdatesOnlyOwnedTasklet()
     {
         // Guards that common pin actions are scoped in storage, so API handlers
         // do not need to load and rewrite the whole Tasklet to flip one flag.
@@ -361,7 +361,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task CompleteTaskletAsync_MarksOwnedTaskletCompleted()
+    public async Task CompleteTaskletAsync_WhenCalledForOwnedAndUnownedTasklet_MarksOnlyOwnedTaskletCompleted()
     {
         // Guards that completing a Tasklet updates only completion fields and
         // leaves other mutable fields intact.
@@ -390,7 +390,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task UpdateTaskletAsync_PersistsMutableFields()
+    public async Task UpdateTaskletAsync_WhenMutableFieldsChange_PersistsMutableFields()
     {
         // Guards that updates persist every mutable Tasklet field.
         var created = await Provider.CreateTaskletAsync(
@@ -428,7 +428,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task UpdateTaskletAsync_PreservesUserIdAndCreatedAt()
+    public async Task UpdateTaskletAsync_WhenIdentityFieldsChange_PreservesUserIdAndCreatedAt()
     {
         // Guards that updates cannot move a Tasklet between users or rewrite
         // its original creation timestamp.
@@ -452,7 +452,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task UpdateTaskletAsync_Throws_WhenMissing()
+    public async Task UpdateTaskletAsync_WhenTaskletIsMissing_ThrowsKeyNotFoundException()
     {
         // Guards that updating a missing Tasklet fails clearly for callers.
         await Assert
@@ -465,7 +465,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task DeleteTaskletAsync_ReturnsOne_WhenDeleted()
+    public async Task DeleteTaskletAsync_WhenTaskletExists_DeletesTaskletAndReturnsOne()
     {
         // Guards that deleting an existing Tasklet returns one affected row and
         // removes the row from storage.
@@ -481,7 +481,7 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
     }
 
     [Test]
-    public async Task DeleteTaskletAsync_ReturnsZero_WhenMissing()
+    public async Task DeleteTaskletAsync_WhenTaskletIsMissing_ReturnsZero()
     {
         // Guards that deleting a missing Tasklet is idempotent from the
         // provider boundary and reports zero affected rows.

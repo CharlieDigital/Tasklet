@@ -139,9 +139,9 @@ If I have time, I will deploy this to Cloud Run!
 
 Things I did not get done...
 
-- [] Fully test the container build and deployment to Cloud Run (might need another 2-3 hours)
-- [] Make the search and filtering work on the backend
-- [] Make use of the pagination; added to the API, but the demo dataset will be small
-- [] UX tweaks to make it easier to quickly update individual fields like color, status, etc. without going to edit tab
-- [] FTS5 Sqlite integration for better backend search capabilities
-- [] AI features like "agenda" and sorting by impact (due date and priority, urgency from the title, etc.)
+- [ ] Fully test the container build and deployment to Cloud Run (might need another 2-3 hours)
+- [ ] Make the search and filtering work on the backend
+- [ ] Make use of the pagination; added to the API, but the demo dataset will be small
+- [ ] UX tweaks to make it easier to quickly update individual fields like color, status, etc. without going to edit tab
+- [ ] FTS5 Sqlite integration for better backend search capabilities
+- [ ] AI features like "agenda" and sorting by impact (due date and priority, urgency from the title, etc.)
