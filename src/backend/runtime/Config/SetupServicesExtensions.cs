@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
@@ -23,6 +24,7 @@ public static class SetupServicesExtensions
     private const string FirebaseAuthEmulatorHostEnvironmentVariable =
         "FIREBASE_AUTH_EMULATOR_HOST";
     private const string FirebaseAuthEmulatorAccessToken = "firebase-auth-emulator";
+    private const string OpenApiCodeGenerationEntryAssemblyName = "GetDocument.Insider";
 
     private static readonly Dictionary<string, object> DefaultAttributes = new()
     {
@@ -41,11 +43,19 @@ public static class SetupServicesExtensions
             IWebHostEnvironment env
         )
         {
-            var projectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id";
-            var credential = GetFirebaseCredential(env);
+            if (!IsOpenApiCodeGenerationEntryPoint())
+            {
+                var projectId = settings.Firebase?.ProjectId ?? "missing-firebase-project-id";
 
-            FirebaseApp.Create(new AppOptions() { Credential = credential, ProjectId = projectId });
+                var credential = GetFirebaseCredential(env);
 
+                FirebaseApp.Create(
+                    new AppOptions() { Credential = credential, ProjectId = projectId }
+                );
+            }
+
+            // OpenAPI generation starts the ASP.NET Core pipeline, so auth
+            // services must exist even though token validation will not run.
             services
                 .AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
                 .AddScheme<FirebaseAuthenticationOptions, FirebaseAuthenticationHandler>(
@@ -54,6 +64,25 @@ public static class SetupServicesExtensions
                 );
 
             return services;
+        }
+
+        /// <summary>
+        /// Detects build-time OpenAPI document generation.
+        /// </summary>
+        /// <remarks>
+        /// <c>Microsoft.Extensions.ApiDescription.Server</c> loads the app from
+        /// <c>GetDocument.Insider</c>. Skipping Firebase Admin setup here keeps
+        /// schema generation independent from local emulator or Google ADC state.
+        /// </remarks>
+        private static bool IsOpenApiCodeGenerationEntryPoint()
+        {
+            var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
+
+            return string.Equals(
+                entryAssemblyName,
+                OpenApiCodeGenerationEntryAssemblyName,
+                StringComparison.Ordinal
+            );
         }
 
         /// <summary>

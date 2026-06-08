@@ -45,7 +45,11 @@
   Uses the environment variable GEN=true or te build flag /p:GenerateSchema=true
   to trigger generation
   -->
-  <Target Name="Bindings" AfterTargets="Build" Condition="'$(Configuration)' == 'Gen' Or '$(GEN)' == 'true' Or '$(GenerateSchema)' == 'true'">
+  <Target
+    Name="Bindings"
+    AfterTargets="Build"
+    Condition="'$(Configuration)' == 'Gen' Or '$(GEN)' == 'true' Or '$(GenerateSchema)' == 'true'"
+  >
     <Message Text="Generating OpenAPI schema file." Importance="high" />
     <!-- Generate TS bindings for the web app -->
     <Exec Command="yarn generate" WorkingDirectory="../../web" />
