@@ -19,6 +19,8 @@
         <TaskletActionGroup
           :tasklet="tasklet"
           :visible="isHovered"
+          :show-pin-action="showPinAction"
+          :show-complete-action="showCompleteAction"
           show-on-hover
           @pin="emit('pin', $event)"
           @complete="emit('complete', $event)"
@@ -75,9 +77,17 @@ import { Pinned } from "@vicons/tabler";
 
 dayjs.extend(relativeTime);
 
-const props = defineProps<{
-  tasklet: TaskletResponse;
-}>();
+const props = withDefaults(
+  defineProps<{
+    tasklet: TaskletResponse;
+    showPinAction?: boolean;
+    showCompleteAction?: boolean;
+  }>(),
+  {
+    showPinAction: true,
+    showCompleteAction: true,
+  },
+);
 
 const emit = defineEmits<{
   pin: [tasklet: TaskletResponse];

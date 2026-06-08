@@ -11,10 +11,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     NAlert: typeof import('naive-ui')['NAlert']
     NAvatar: typeof import('naive-ui')['NAvatar']
-    NBadge: typeof import('naive-ui')['NBadge']
     NButton: typeof import('naive-ui')['NButton']
     NButtonGroup: typeof import('naive-ui')['NButtonGroup']
     NCard: typeof import('naive-ui')['NCard']
@@ -25,8 +23,6 @@ declare module 'vue' {
     NForm: typeof import('naive-ui')['NForm']
     NFormItemGi: typeof import('naive-ui')['NFormItemGi']
     NGrid: typeof import('naive-ui')['NGrid']
-    NH2: typeof import('naive-ui')['NH2']
-    NH3: typeof import('naive-ui')['NH3']
     NIcon: typeof import('naive-ui')['NIcon']
     NInput: typeof import('naive-ui')['NInput']
     NInputGroup: typeof import('naive-ui')['NInputGroup']
