@@ -28,8 +28,8 @@ public class SqliteDatabaseFixture : IAsyncInitializer, IAsyncDisposable
     /// </summary>
     /// <param name="context">Context owned by the current test transaction.</param>
     /// <returns>A provider wired to the supplied context.</returns>
-    public SqliteStorageProvider CreateProvider(SqliteContext context)
-        => new(context, NullLogger<SqliteStorageProvider>.Instance);
+    public SqliteStorageProvider CreateProvider(SqliteContext context) =>
+        new(context, NullLogger<SqliteStorageProvider>.Instance);
 
     /// <summary>
     /// Creates a new context against the temporary Sqlite database.

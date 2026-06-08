@@ -375,16 +375,8 @@ public class SqliteStorageProviderTests(SqliteDatabaseFixture fixture)
             )
         );
 
-        var mismatch = await Provider.CompleteTaskletAsync(
-            created.Id,
-            "user-2",
-            completedAtUtc
-        );
-        var updated = await Provider.CompleteTaskletAsync(
-            created.Id,
-            "user-1",
-            completedAtUtc
-        );
+        var mismatch = await Provider.CompleteTaskletAsync(created.Id, "user-2", completedAtUtc);
+        var updated = await Provider.CompleteTaskletAsync(created.Id, "user-1", completedAtUtc);
         var persisted = await Provider.GetTaskletByIdAsync(created.Id);
 
         await Assert.That(mismatch).IsNull();
